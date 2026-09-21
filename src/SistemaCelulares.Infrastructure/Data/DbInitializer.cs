@@ -292,5 +292,74 @@ public static class DbInitializer
 
             await context.SaveChangesAsync();
         }
+
+        // 8. Sembrar Secuencias de Comprobantes Fiscales (NCF) Iniciales de DGII
+        if (!await context.ComprobanteFiscalSecuencias.AnyAsync())
+        {
+            context.ComprobanteFiscalSecuencias.AddRange(
+                new ComprobanteFiscalSecuencia
+                {
+                    Tipo = TipoComprobanteFiscal.Consumo_B02,
+                    Serie = "B",
+                    CodigoTipo = "02",
+                    SecuenciaActual = 1,
+                    SecuenciaHasta = 100000,
+                    FechaVencimiento = DateTime.UtcNow.AddYears(2),
+                    Activo = true,
+                    Descripcion = "Facturas de Consumo (Consumidor Final)"
+                },
+                new ComprobanteFiscalSecuencia
+                {
+                    Tipo = TipoComprobanteFiscal.CreditoFiscal_B01,
+                    Serie = "B",
+                    CodigoTipo = "01",
+                    SecuenciaActual = 1,
+                    SecuenciaHasta = 50000,
+                    FechaVencimiento = DateTime.UtcNow.AddYears(2),
+                    Activo = true,
+                    Descripcion = "Facturas con Valor de Crédito Fiscal (Requiere RNC)"
+                },
+                new ComprobanteFiscalSecuencia
+                {
+                    Tipo = TipoComprobanteFiscal.RegimenEspecial_B14,
+                    Serie = "B",
+                    CodigoTipo = "14",
+                    SecuenciaActual = 1,
+                    SecuenciaHasta = 10000,
+                    FechaVencimiento = DateTime.UtcNow.AddYears(2),
+                    Activo = true,
+                    Descripcion = "Comprobantes para Regímenes Especiales de Tributación"
+                },
+                new ComprobanteFiscalSecuencia
+                {
+                    Tipo = TipoComprobanteFiscal.Gubernamental_B15,
+                    Serie = "B",
+                    CodigoTipo = "15",
+                    SecuenciaActual = 1,
+                    SecuenciaHasta = 10000,
+                    FechaVencimiento = DateTime.UtcNow.AddYears(2),
+                    Activo = true,
+                    Descripcion = "Comprobantes Gubernamentales"
+                }
+            );
+
+            await context.SaveChangesAsync();
+        }
+
+        // 9. Sembrar Cliente Consumidor Final por defecto
+        if (!await context.Clientes.AnyAsync())
+        {
+            context.Clientes.Add(new Cliente
+            {
+                NombreCompleto = "Consumidor Final (Cliente Genérico)",
+                RncOCedula = "000-0000000-0",
+                Telefono = "809-000-0000",
+                Email = "cliente@tienda.do",
+                Direccion = "Santo Domingo, RD",
+                Activo = true
+            });
+
+            await context.SaveChangesAsync();
+        }
     }
 }

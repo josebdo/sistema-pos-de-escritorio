@@ -67,3 +67,20 @@
      - Verificación activa de conectividad (`ProbarConexionAsync`) con reintentos controlados para evitar caídas abruptas del aplicativo ante fallas de red local.
 - **Motivo**: Permitir la expansión de negocios desde 1 sola PC a múltiples cajas simultáneas sin perder datos ni requerir reinstalación manual.
 - **Fecha**: 2026-09-20
+
+## DEC-010
+- **Estado**: VIGENTE
+- **Decisión**: Arquitectura de Ventas, Facturación y Control de Comprobantes Fiscales (NCF) DGII.
+  1. **Comprobantes Fiscales Dominicanos**:
+     - Soporte para series oficiales tipo B: `B01` (Crédito Fiscal), `B02` (Consumo), `B14` (Regímenes Especiales), `B15` (Gubernamental) y Sin NCF (Ticket de Venta Directo).
+     - Formato estándar de 11 caracteres: `B` + 2 dígitos de tipo + 8 dígitos correlativos con ceros a la izquierda (ej: `B0200000001`).
+     - Control de rangos autorizados por la DGII (`SecuenciaActual`, `SecuenciaHasta`, `FechaVencimiento`).
+     - Validación obligatoria de RNC/Cédula y Razón Social del cliente en facturas B01.
+  2. **Control Atómico de Inventario**:
+     - Descuento inmediato de `StockActual` al confirmar la venta dentro de una transacción EF Core. Se bloquea la venta ante insuficiencia de stock.
+  3. **Cálculo de Impuestos (ITBIS)**:
+     - Tasa de ITBIS del 18% para República Dominicana con desglose transparente en tickets: Subtotal Neto, ITBIS (18%) y Total en RD$.
+  4. **Trazabilidad de Turno y Cobro**:
+     - Requiere turno de caja activo (`TurnoId`), registra la sesión del cajero y vincula el cobro a través del servicio `IPagoService`.
+- **Motivo**: Cumplimiento de la normativa fiscal de la DGII de República Dominicana y control riguroso de inventario en punto de venta.
+- **Fecha**: 2026-09-20

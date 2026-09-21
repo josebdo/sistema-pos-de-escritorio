@@ -191,7 +191,17 @@ public class MainForm : Form
 
         if (_sesion.TienePermiso(Permisos.VentasRegistrar) || _sesion.TienePermiso(Permisos.VentasHistorial))
         {
-            CrearBotonMenu(panelMenu, "🧾 Ventas / Facturación", () => MostrarAvisoFase("Ventas y Facturación", "Punto de venta y registro de tickets con métodos de pago."));
+            CrearBotonMenu(panelMenu, "🧾 Ventas / Facturación", () =>
+            {
+                var f = new PuntoVentaForm(
+                    _serviceProvider.GetRequiredService<IVentaService>(),
+                    _serviceProvider.GetRequiredService<IProductoService>(),
+                    _serviceProvider.GetRequiredService<IPagoService>(),
+                    _serviceProvider.GetRequiredService<ITurnoService>(),
+                    _sesion,
+                    _serviceProvider);
+                AbrirFormularioHijo(f, "Punto de Venta (POS) y Facturación");
+            });
         }
 
         if (_sesion.TienePermiso(Permisos.FinanzasReportesVer))

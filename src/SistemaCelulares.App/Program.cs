@@ -70,6 +70,7 @@ internal static class Program
         services.AddScoped<IPagoService, PagoService>();
         services.AddSingleton<IConfiguracionRedService, ConfiguracionRedService>();
         services.AddScoped<IDataMigrationService, DataMigrationService>();
+        services.AddScoped<IVentaService, VentaService>();
 
         // Formularios
         services.AddTransient<LoginForm>();
@@ -82,5 +83,7 @@ internal static class Program
         services.AddTransient<AlertasStockForm>();
         services.AddTransient<FinanzasForm>();
         services.AddTransient<ConfiguracionRedMultiCajaForm>();
+        services.AddTransient<PuntoVentaForm>();
+        services.AddTransient<HistorialVentasForm>();
     }
 }
