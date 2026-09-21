@@ -152,7 +152,13 @@ public class MainForm : Form
 
         if (_sesion.TienePermiso(Permisos.ProveedoresGestionar))
         {
-            CrearBotonMenu(panelMenu, "🚚 Proveedores", () => MostrarAvisoFase("Proveedores (Fase 4)", "Catálogo de proveedores y compras."));
+            CrearBotonMenu(panelMenu, "🚚 Proveedores", () =>
+            {
+                var f = new ProveedoresForm(
+                    _serviceProvider.GetRequiredService<IProveedorService>(),
+                    _sesion);
+                AbrirFormularioHijo(f, "Gestión de Proveedores Comerciales");
+            });
         }
 
         if (_sesion.TienePermiso(Permisos.VentasRegistrar) || _sesion.TienePermiso(Permisos.VentasHistorial))

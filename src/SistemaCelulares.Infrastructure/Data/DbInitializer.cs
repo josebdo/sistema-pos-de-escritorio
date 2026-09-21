@@ -230,5 +230,44 @@ public static class DbInitializer
 
             await context.SaveChangesAsync();
         }
+
+        // 6. Sembrar Proveedores Iniciales de República Dominicana
+        if (!await context.Proveedores.AnyAsync())
+        {
+            context.Proveedores.AddRange(
+                new Proveedor
+                {
+                    Nombre = "Distribuidora Celular Dominicana SRL",
+                    Rnc = "101-84920-1",
+                    Telefono = "809-555-0199",
+                    Email = "ventas@districelular.do",
+                    Direccion = "Av. 27 de Febrero #240, Santo Domingo, D.N.",
+                    Contacto = "Lic. Carlos Méndez",
+                    Activo = true
+                },
+                new Proveedor
+                {
+                    Nombre = "Tech Import RD SRL",
+                    Rnc = "131-72948-2",
+                    Telefono = "809-555-0245",
+                    Email = "pedidos@techimportrd.com",
+                    Direccion = "Av. John F. Kennedy #88, Santo Domingo",
+                    Contacto = "Ing. Roberto Almonte",
+                    Activo = true
+                },
+                new Proveedor
+                {
+                    Nombre = "Repuestos y Pantallas del Caribe",
+                    Rnc = "102-39841-5",
+                    Telefono = "829-555-0377",
+                    Email = "contacto@repuestoscaribe.do",
+                    Direccion = "Calle El Sol #45, Santiago de los Caballeros",
+                    Contacto = "Manuel Santana",
+                    Activo = true
+                }
+            );
+
+            await context.SaveChangesAsync();
+        }
     }
 }

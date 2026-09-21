@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Turno> Turnos => Set<Turno>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -132,6 +133,20 @@ public class AppDbContext : DbContext
                   .WithMany(c => c.Productos)
                   .HasForeignKey(p => p.CategoriaId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuración de Proveedor
+        modelBuilder.Entity<Proveedor>(entity =>
+        {
+            entity.ToTable("Proveedores");
+            entity.HasKey(pr => pr.Id);
+            entity.Property(pr => pr.Nombre).IsRequired().HasMaxLength(150);
+            entity.HasIndex(pr => pr.Nombre);
+            entity.Property(pr => pr.Rnc).HasMaxLength(20);
+            entity.Property(pr => pr.Telefono).HasMaxLength(30);
+            entity.Property(pr => pr.Email).HasMaxLength(100);
+            entity.Property(pr => pr.Direccion).HasMaxLength(250);
+            entity.Property(pr => pr.Contacto).HasMaxLength(100);
         });
     }
 }

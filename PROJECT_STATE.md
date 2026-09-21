@@ -12,49 +12,48 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 - xUnit 2.5 (Pruebas unitarias)
 
 ## Estado actual
-Fase: Fase 3: Productos, categorías y SKU
+Fase: Fase 4: Proveedores
 Estado: EN PROGRESO
-Último commit verificado: 5013c71
-Última actividad: Culminación de la Fase 2 (Turnos y Caja) con build y 18 tests unitarios pasando al 100%.
+Último commit verificado: 5095c48
+Última actividad: Culminación de la Fase 3 (Productos, Categorías y SKU) con build y 25 tests unitarios pasando al 100%.
 Fecha: 2026-09-20
 
 ## Fases completadas
 - Fase 0: Inicialización del repositorio, reglas canónicas y arquitectura base (commit: c116627)
 - Fase 1: Sistema de roles y permisos (RBAC), seguridad BCrypt y formularios WinForms (commit: c116627)
 - Fase 2: Apertura y cierre de caja (turnos), arqueo y cálculo de diferencias (commit: 5013c71)
+- Fase 3: Productos, categorías y SKU con generación automática e índice único (commit: 5095c48)
 
 ## Fase actual
-Descripción: Gestión completa del catálogo de celulares y accesorios organizados por categoría, cada uno con SKU único, precios (costo y venta), stock actual, stock mínimo para alertas y código de barras.
-Objetivo: CRUD de categorías y productos, validación de unicidad de SKU, desactivación lógica para trazabilidad y preparación de campos para alertas y código de barras.
+Descripción: Gestión de proveedores del negocio (crear, editar, desactivar) con soporte para identificación fiscal dominicana (RNC).
+Objetivo: CRUD de proveedores (Nombre, RNC fiscal dominicano, Teléfono, Email, Dirección, Contacto), validación de RNC y desactivación en lugar de eliminación física para trazabilidad de compras.
 Definition of Ready (qué debía estar resuelto antes de empezar esta fase):
-- [x] Fase 1 (Roles y permisos) y Fase 2 (Caja y turnos) COMPLETADAS.
-- [x] Formato de moneda dominicana configurado (RD$ / DOP).
-- [ ] Definición de generación de SKU (confirmar si es automática por prefijo de categoría o manual con validación de unicidad, y registrar en `docs/DECISIONS.md`).
+- [x] Fase 1 (Roles y permisos) y Fase 3 (Productos y catálogo) COMPLETADAS.
+- [x] Catálogo de permisos `Proveedores.Gestionar` disponible en RBAC.
 Tareas completadas:
-- [x] Permisos `Productos.Ver`, `Productos.Crear`, `Productos.Editar`, `Productos.Desactivar`, `Categorias.Gestionar`, `AlertasStock.Ver` ya registrados en catálogo RBAC.
+- [x] Permiso `Proveedores.Gestionar` activo en catálogo canónico.
 Tareas pendientes:
-- [ ] Registro de decisión arquitectónica sobre SKU en `docs/DECISIONS.md`.
-- [ ] Modelado de entidades: `Categoria`, `Producto`.
-- [ ] Configuración en `AppDbContext` (índice único en `Sku` y `CodigoBarras`, FKs, precisión decimal).
-- [ ] Implementación de `IProductoService` / `ProductoService` e `ICategoriaService` / `CategoriaService`.
-- [ ] Formularios WinForms: `CategoriasForm`, `ProductosForm`, `ProductoModalForm`.
-- [ ] Pruebas unitarias para validaciones de SKU, precios, stock y desactivación lógica.
+- [ ] Modelado de entidad `Proveedor` en `Core`.
+- [ ] Configuración en `AppDbContext` (índices, campos, longitud de RNC).
+- [ ] Implementación de `IProveedorService` y `ProveedorService`.
+- [ ] Formularios WinForms: `ProveedoresForm` y `ProveedorModalForm`.
+- [ ] Pruebas unitarias para validaciones de proveedor, formato de RNC y desactivación lógica.
 
 ## Próximo paso
-Confirmar con el usuario el inicio de la Fase 3 (Productos, categorías y SKU) y definir la estrategia de generación de SKU (ej. SKU automático `CAT-0001` con opción de personalización).
+Confirmar con el usuario el inicio del desarrollo de la Fase 4 (Proveedores), modelar la entidad `Proveedor` y construir la interfaz de gestión.
 
 ## Verificación de la última sesión
 Build: OK (0 advertencias, 0 errores en `SistemaCelulares.sln`)
 Tests ejecutados: dotnet test SistemaCelulares.sln
-Resultado: 18/18 pasaron (100% de éxito)
+Resultado: 25/25 pasaron (100% de éxito)
 Errores pendientes: Ninguno
 
 ## Decisiones arquitectónicas
-Ver `docs/DECISIONS.md` — DEC-001 (SQLite), DEC-002 (EF Core), DEC-003 (Localización RD), DEC-004 (RBAC y BCrypt).
+Ver `docs/DECISIONS.md` — DEC-001 (SQLite), DEC-002 (EF Core), DEC-003 (Localización RD), DEC-004 (RBAC y BCrypt), DEC-005 (Generación de SKU).
 
 ## Base de datos
-Entidades creadas: `Usuario`, `Rol`, `Permiso`, `RolPermiso`, `Turno`
-Última migración: Esquema con Seed Data y módulo de turnos
+Entidades creadas: `Usuario`, `Rol`, `Permiso`, `RolPermiso`, `Turno`, `Categoria`, `Producto`
+Última migración: Esquema con catálogo completo de productos y categorías
 
 ## Problemas conocidos
 Ninguno.
@@ -68,9 +67,9 @@ Librerías instaladas:
 - Microsoft.EntityFrameworkCore.InMemory (8.0.13)
 
 ## Cambios recientes
-Implementación completa de la Fase 2 (Apertura y cierre de turnos de caja, arqueo con cálculo de diferencias y 18 tests unitarios pasando al 100%).
+Implementación completa de la Fase 3 (Categorías con prefijos, Productos con SKU automático correlativo, precios en RD$, alertas de stock mínimo y 25 pruebas unitarias al 100%).
 
 ## Notas importantes
 - Moneda por defecto: Peso Dominicano (RD$ / DOP) con formato regional `es-DO`.
-- No se pueden registrar ventas sin tener un turno de caja abierto.
-- La diferencia de arqueo se calcula como: `MontoCierre - (MontoApertura + TotalVentasEfectivo)`.
+- No se pueden eliminar físicamente productos ni categorías con registros activos; se desactivan para preservar trazabilidad.
+- Los SKUs son generados automáticamente en base al prefijo de la categoría con formato `XXX-0001` y se validan como únicos.
