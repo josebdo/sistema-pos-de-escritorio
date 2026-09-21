@@ -45,7 +45,6 @@ public class MainForm : Form
             Width = 240,
             BackColor = UITheme.SidebarBg
         };
-        Controls.Add(_panelSidebar);
 
         // Logo / Nombre App
         var panelLogo = new Panel { Dock = DockStyle.Top, Height = 80, Padding = new Padding(15) };
@@ -260,7 +259,6 @@ public class MainForm : Form
             BackColor = Color.White,
             Padding = new Padding(20, 15, 20, 15)
         };
-        Controls.Add(_panelHeader);
 
         _lblTituloSeccion = new Label
         {
@@ -290,7 +288,11 @@ public class MainForm : Form
             BackColor = UITheme.AppBg,
             Padding = new Padding(0)
         };
+
+        // Orden de Docking en WinForms (Fill primero en la colección para z-order inferior, luego Top, luego Left)
         Controls.Add(_panelContenido);
+        Controls.Add(_panelHeader);
+        Controls.Add(_panelSidebar);
     }
 
     private void CrearBotonMenu(FlowLayoutPanel panelMenu, string texto, Action accion)
