@@ -14,8 +14,8 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 ## Estado actual
 Fase: Fase 12: Ventas, Facturación y Comprobantes Fiscales (NCF)
 Estado: COMPLETADA
-Último commit verificado: f22e7a0
-Última actividad: Corrección de referencias de sesión en formularios WinForms y verificación de compilación exitosa (85 tests pasando al 100%).
+Último commit verificado: 1116067
+Última actividad: Corrección de docking/z-order de MainForm y verificación integral de UI (85 tests pasando al 100%).
 Fecha: 2026-09-20
 
 ## Fases completadas
