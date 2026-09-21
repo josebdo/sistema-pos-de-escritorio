@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<DetalleCompra> DetalleCompras => Set<DetalleCompra>();
     public DbSet<CategoriaFinanciera> CategoriasFinancieras => Set<CategoriaFinanciera>();
     public DbSet<MovimientoFinanciero> MovimientosFinancieros => Set<MovimientoFinanciero>();
+    public DbSet<Pago> Pagos => Set<Pago>();
+    public DbSet<DetallePago> DetallePagos => Set<DetallePago>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -224,6 +226,48 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(mf => mf.Fecha);
+        });
+
+        // Configuración de Pago
+        modelBuilder.Entity<Pago>(entity =>
+        {
+            entity.ToTable("Pagos");
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.MontoTotal).HasPrecision(18, 2);
+            entity.Property(p => p.MontoPagado).HasPrecision(18, 2);
+            entity.Property(p => p.MontoVuelto).HasPrecision(18, 2);
+            entity.Property(p => p.Notas).HasMaxLength(300);
+
+            entity.HasOne(p => p.Usuario)
+                  .WithMany()
+                  .HasForeignKey(p => p.UsuarioId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.Turno)
+                  .WithMany()
+                  .HasForeignKey(p => p.TurnoId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(p => p.FechaPago);
+            entity.HasIndex(p => p.Estado);
+        });
+
+        // Configuración de DetallePago
+        modelBuilder.Entity<DetallePago>(entity =>
+        {
+            entity.ToTable("DetallesPago");
+            entity.HasKey(dp => dp.Id);
+            entity.Property(dp => dp.Monto).HasPrecision(18, 2);
+            entity.Property(dp => dp.MontoEntregado).HasPrecision(18, 2);
+            entity.Property(dp => dp.MontoVuelto).HasPrecision(18, 2);
+            entity.Property(dp => dp.BancoDestino).HasMaxLength(100);
+            entity.Property(dp => dp.NumeroReferencia).HasMaxLength(100);
+            entity.Property(dp => dp.NumeroAutorizacionPos).HasMaxLength(100);
+
+            entity.HasOne(dp => dp.Pago)
+                  .WithMany(p => p.Detalles)
+                  .HasForeignKey(dp => dp.PagoId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -41,3 +41,13 @@
 - **Decisión**: Estándar de código de barras **EAN-13** (GS1) para productos del inventario. Para productos propios o sin código de fábrica, se utiliza el rango de uso interno/restringido reservado universalmente por GS1 (prefijo `20` a `29`), calculando el 13.° dígito verificador mediante el algoritmo canónico **Modulo 10** (ponderación 1 y 3 alternada).
 - **Motivo**: Garantiza compatibilidad universal con lectores ópticos USB estándar y terminales de punto de venta en República Dominicana, evitando colisiones con códigos de barras comerciales emitidos por fabricantes externos.
 - **Fecha**: 2026-09-20
+
+## DEC-008
+- **Estado**: VIGENTE
+- **Decisión**: Modelo integral de métodos de pago (`Efectivo`, `Transferencia`, `TarjetaDebito`, `TarjetaCredito`, `PagoMixto`) con reglas de negocio específicas:
+  1. **Efectivo**: Cálculo en tiempo real de devuelta/vuelto en pesos dominicanos (RD$) (`MontoEntregado - MontoTotal`), validando montos suficientes.
+  2. **Transferencia Bancaria dominicana**: Verificación manual por el cajero (`EsVerificado`). Si la transferencia no ha sido constatada en cuenta bancaria (Banreservas, Banco Popular, BHD, etc.), el pago queda en estado `PendienteVerificacion` y no computa en el arqueo de caja líquida hasta su aprobación.
+  3. **Tarjeta (Débito/Crédito)**: Registro de modalidad y captura opcional de número de autorización/referencia del datáfono externo (Cardnet, Azul, Visanet) sin integración directa de hardware en primera fase.
+  4. **Pagos Mixtos**: Validación estricta de que los importes parciales cubran el total exacto de la operación.
+- **Motivo**: Flexibilidad operativa en punto de venta y control riguroso de cuadre de caja conforme a las prácticas comerciales de República Dominicana.
+- **Fecha**: 2026-09-20
