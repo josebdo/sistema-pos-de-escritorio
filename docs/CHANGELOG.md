@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.9.0] - 2026-09-20
+- Implementación completa de la Fase 9: Código de barras — generación.
+- Registro de decisión arquitectónica DEC-007: Estándar EAN-13, rango de uso interno restringido GS1 (prefijos 20-29), algoritmo Modulo 10 con ponderación 1 y 3 alternada.
+- Creación de interfaz `IEan13GeneratorService` y servicio `Ean13GeneratorService` para cálculo de dígito verificador y generación de secuencias numéricas sin colisión.
+- Creación de `BarcodeRenderer` nativo (System.Drawing) para renderizado de patrones binarios EAN-13 (Left Guard, Center Guard, Right Guard y tablas A/B/C) sin librerías externas de terceros.
+- Creación de formulario `ImprimirEtiquetaModalForm` con vista previa gráfica de código de barras, precio en RD$, selector de tamaño de etiqueta (pequeña 30x20mm, estándar 50x25mm, grande 70x35mm) y selector de copias.
+- Integración de generación automática y validación de código de barras en `ProductoModalForm` y botón de impresión en `ProductosForm`.
+- Suite de 13 nuevas pruebas unitarias para generación EAN-13 (total de 60 pruebas pasando al 100%).
+
 ## [0.8.0] - 2026-09-20
 - Implementación completa de la Fase 8: Código de barras — lectura.
 - Implementación de método de búsqueda optimizada `BuscarPorCodigoBarrasOSkuAsync` en `IProductoService` y `ProductoService`.

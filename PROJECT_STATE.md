@@ -12,10 +12,10 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 - xUnit 2.5 (Pruebas unitarias)
 
 ## Estado actual
-Fase: Fase 9: Código de barras — generación
+Fase: Fase 10: Métodos de pago
 Estado: LISTO PARA INICIAR (Esperando confirmación)
-Último commit verificado: c29e063
-Última actividad: Culminación de la Fase 8 (Código de barras — lectura) con build y 47 tests unitarios pasando al 100%.
+Último commit verificado: 37c8038
+Última actividad: Culminación de la Fase 9 (Código de barras — generación) con build y 60 tests unitarios pasando al 100%.
 Fecha: 2026-09-20
 
 ## Fases completadas
@@ -28,24 +28,25 @@ Fecha: 2026-09-20
 - Fase 6: Alertas de stock mínimo, criticidad y análisis de reposición (commit: 57daa88)
 - Fase 7: Gastos e ingresos del negocio, balance neto consolidado en RD$ (commit: 325f361)
 - Fase 8: Código de barras — lectura, helper de escaneo USB y verificador de precios (commit: c29e063)
+- Fase 9: Código de barras — generación EAN-13 GS1 (prefijos 20-29) e impresión de etiquetas térmicas (commit: 37c8038)
 
 ## Próxima fase
-Fase: Fase 9: Código de barras — generación
-Descripción: Generación automática de códigos de barras estándar EAN-13 para productos propios o sin código de fábrica, utilizando el rango de uso interno restringido GS1 (prefijo 20-29), cálculo de checksum y renderizado gráfico / impresión de etiquetas.
+Fase: Fase 10: Métodos de pago
+Descripción: Implementación de pasarela de cobro multi-método para puntos de venta: Efectivo con cálculo en tiempo real de devuelta/vuelto en RD$, Transferencia Bancaria dominicana (Banreservas, Banco Popular, BHD, etc.) con verificación manual por parte del vendedor y número de referencia obligatorio, y Tarjeta Débito/Crédito con registro de número de autorización del POS / terminal.
 Objetivo:
-- Registrar decisión arquitectónica DEC-007 (EAN-13, rango GS1 20-29, algoritmo Modulo 10).
-- Servicio `IEan13GeneratorService` para cálculo de dígito verificador y generación de secuencias sin colisión.
-- Generador de imagen/renderizado de código de barras (System.Drawing Bitmap) para vista previa e impresión de etiquetas con nombre de producto y precio RD$.
-- Integración en `ProductoModalForm` y botón de impresión en `ProductosForm`.
+- Registrar decisión arquitectónica DEC-008 para soporte de cobro mixto/fraccionado y validaciones por tipo de método.
+- Definir enumeración `MetodoPago` (`Efectivo`, `Transferencia`, `Tarjeta`, `Mixto`) y entidades/DTOs de transacción de pago.
+- Crear componente/modal interactivo de cobro (`CobroModalForm`) con desglose en RD$, cálculo automático de vuelto, selección de banco de destino y captura de referencia/autorización.
+- Pruebas unitarias para cálculo de vuelto, validaciones de montos y reglas de cobro.
 
 ## Verificación de la última sesión
 Build: OK (0 advertencias, 0 errores en `SistemaCelulares.sln`)
 Tests ejecutados: dotnet test SistemaCelulares.sln
-Resultado: 47/47 pasaron (100% de éxito)
+Resultado: 60/60 pasaron (100% de éxito)
 Errores pendientes: Ninguno
 
 ## Decisiones arquitectónicas
-Ver `docs/DECISIONS.md` — DEC-001 a DEC-006.
+Ver `docs/DECISIONS.md` — DEC-001 a DEC-007.
 
 ## Base de datos
 Entidades creadas: `Usuario`, `Rol`, `Permiso`, `RolPermiso`, `Turno`, `Categoria`, `Producto`, `Proveedor`, `Compra`, `DetalleCompra`, `CategoriaFinanciera`, `MovimientoFinanciero`
