@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [0.12.0] - 2026-09-20
+- Implementación completa de la Fase 12: Ventas, Facturación comercial y Comprobantes Fiscales (NCF DGII).
+- Registro de decisión arquitectónica DEC-010: Arquitectura de Ventas, Facturación y Control de Comprobantes Fiscales (NCF) DGII.
+- Creación de entidades `Venta`, `DetalleVenta`, `Cliente`, `ComprobanteFiscalSecuencia` y enums `TipoComprobanteFiscal` (`B01`, `B02`, `B14`, `B15`) y `EstadoVenta`.
+- Implementación de `IVentaService` y `VentaService`:
+  - Emisión de NCF correlativo autorizado con validación de rangos y fechas de vencimiento.
+  - Validación de RNC/Cédula obligatorio en Facturas de Crédito Fiscal (B01).
+  - Control de inventario atómico en tiempo real (decremento inmediato de stock).
+  - Cálculo de ITBIS del 18% para República Dominicana con desglose neto.
+  - Vinculación obligatoria a turno de caja activo e integración con `IPagoService`.
+  - Mecanismo de anulación de ventas con reposición automática de stock y cancelación de pagos.
+- Creación del helper `TicketRenderer` para renderizado e impresión de tickets térmicos comerciales con desglose fiscal completo.
+- Implementación del formulario de Punto de Venta `PuntoVentaForm` con escáner de códigos de barras / SKU, carrito interactivo, cálculo de impuestos, liquidación con `CobroModalForm` e impresión directa (`F12`).
+- Implementación de `HistorialVentasForm` para auditoría, consulta y reimpresión de tickets.
+- Sembrado inicial en `DbInitializer` de secuencias oficiales de NCF DGII (B02, B01, B14, B15) y cliente genérico Consumidor Final.
+- Suite de 7 nuevas pruebas unitarias para ventas, NCF, control de stock y cálculo de ITBIS (total de 85 pruebas pasando al 100%).
+
 ## [0.11.0] - 2026-09-20
 - Implementación completa de la Fase 11: Modo caja única / Multi-caja.
 - Registro de decisión arquitectónica DEC-009: Arquitectura de Conmutación de Modo Caja Única / Multi-Caja y Migración de Datos.

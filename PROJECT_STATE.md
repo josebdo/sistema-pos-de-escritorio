@@ -13,9 +13,9 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 
 ## Estado actual
 Fase: Fase 12: Ventas, Facturación y Comprobantes Fiscales (NCF)
-Estado: LISTO PARA INICIAR (Esperando confirmación)
-Último commit verificado: 1c441be
-Última actividad: Culminación de la Fase 11 (Modo caja única / Multi-caja) con build y 78 tests unitarios pasando al 100%.
+Estado: COMPLETADA
+Último commit verificado: 990f9a8
+Última actividad: Culminación de la Fase 12 (Ventas, Facturación y Comprobantes Fiscales NCF DGII) con build y 85 tests unitarios pasando al 100%.
 Fecha: 2026-09-20
 
 ## Fases completadas
@@ -31,29 +31,26 @@ Fecha: 2026-09-20
 - Fase 9: Código de barras — generación EAN-13 GS1 (prefijos 20-29) e impresión de etiquetas térmicas (commit: 37c8038)
 - Fase 10: Métodos de pago (Efectivo con devuelta en RD$, Transferencia verificada, Tarjeta POS y Pagos Mixtos) (commit: 4aae986)
 - Fase 11: Modo caja única / Multi-caja (conmutación LAN, snapshots criptográficos SHA-256 y gestión para Super Admin) (commit: 1c441be)
+- Fase 12: Ventas, Facturación comercial y Comprobantes Fiscales NCF DGII (B01, B02, B14, B15), emisión de tickets térmicos e integración de inventario (commit: 990f9a8)
 
-## Próxima fase
-Fase: Fase 12: Ventas, Facturación y Comprobantes Fiscales (NCF)
-Descripción: Sistema completo de Punto de Venta (POS) y Facturación: emisión de tickets de venta, control de inventario en tiempo real (descuento automático de stock), integración con la pasarela de cobro (`CobroModalForm`), vinculación obligatoria a turno de caja activo, soporte de Comprobantes Fiscales de República Dominicana emitidos por DGII (Facturas de Crédito Fiscal B01, Facturas de Consumo B02, Regímenes Especiales B14, Gubernamentales B15) con secuencias correlativas configurables, cálculo de ITBIS (18%) e impresión de tickets térmicos / facturas comerciales.
-Objetivo:
-- Registrar decisión arquitectónica DEC-010 para Comprobantes Fiscales (NCF) y reglas de facturación dominicana.
-- Crear entidades `Venta`, `DetalleVenta`, `ComprobanteFiscalSecuencia`, `TipoComprobanteFiscal` y `Cliente`.
-- Implementar `IVentaService` y `VentaService` con transacciones seguras de descuento de stock, validación de stock disponible, generación de NCF y liquidación de pagos.
-- Desarrollar formulario principal de Punto de Venta `PuntoVentaForm` con buscador rápido por código de barras / SKU / nombre, tabla de carrito de compras, cálculo de subtotales, ITBIS y total en RD$, y botón de cobro (`F12`).
-- Desarrollar pantalla de `HistorialVentasForm` para consulta de tickets, reimpresión y reportes de facturación.
-- Pruebas unitarias completas para ventas, NCF, control de stock e ITBIS.
+## Próximo paso
+El sistema de escritorio cuenta con todas sus fases troncales y requisitos de localización de República Dominicana (NCF, ITBIS 18%, DOP/RD$, RBAC, Turnos, Inventario, Código de Barras EAN-13, Métodos de Pago, Multi-Caja y Facturación POS) completamente implementadas, compilando con 0 advertencias, 0 errores y 85 pruebas unitarias automatizadas aprobadas al 100%.
+Próximos pasos opcionales a solicitud del usuario:
+- Empaquetado o publicación de instalador de escritorio autónomo (Single File Publish / Inno Setup / MSIX).
+- Adición de módulos complementarios (Control de Garantías / Taller de Reparaciones de Celulares con Recepción de Equipos).
 
 ## Verificación de la última sesión
 Build: OK (0 advertencias, 0 errores en `SistemaCelulares.sln`)
 Tests ejecutados: dotnet test SistemaCelulares.sln
-Resultado: 78/78 pasaron (100% de éxito)
+Resultado: 85/85 pasaron (100% de éxito)
 Errores pendientes: Ninguno
 
 ## Decisiones arquitectónicas
-Ver `docs/DECISIONS.md` — DEC-001 a DEC-009.
+Ver `docs/DECISIONS.md` — DEC-001 a DEC-010.
 
 ## Base de datos
-Entidades creadas: `Usuario`, `Rol`, `Permiso`, `RolPermiso`, `Turno`, `Categoria`, `Producto`, `Proveedor`, `Compra`, `DetalleCompra`, `CategoriaFinanciera`, `MovimientoFinanciero`, `Pago`, `DetallePago`
+Entidades creadas: `Usuario`, `Rol`, `Permiso`, `RolPermiso`, `Turno`, `Categoria`, `Producto`, `Proveedor`, `Compra`, `DetalleCompra`, `CategoriaFinanciera`, `MovimientoFinanciero`, `Pago`, `DetallePago`, `Cliente`, `ComprobanteFiscalSecuencia`, `Venta`, `DetalleVenta`
+Última migración: Esquema completo con facturación POS, NCF DGII, finanzas, inventario, turnos, compras y proveedores
 Última migración: Esquema completo con finanzas, inventario, turnos, compras y proveedores
 
 ## Problemas conocidos
