@@ -14,7 +14,7 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 ## Estado actual
 Fase: Fase 8: Código de barras — lectura
 Estado: LISTO PARA INICIAR (Esperando confirmación)
-Último commit verificado: Fase 7 completada
+Último commit verificado: 325f361
 Última actividad: Culminación de la Fase 7 (Gastos e ingresos del negocio) con build y 42 tests unitarios pasando al 100%.
 Fecha: 2026-09-20
 
@@ -26,7 +26,7 @@ Fecha: 2026-09-20
 - Fase 4: Proveedores comerciales con soporte para RNC dominicano y desactivación lógica (commit: d2227ad)
 - Fase 5: Compras a proveedor con incremento de stock y costeo "último costo" (commit: 83b13ba)
 - Fase 6: Alertas de stock mínimo, criticidad y análisis de reposición (commit: 57daa88)
-- Fase 7: Gastos e ingresos del negocio, balance neto consolidado en RD$ (commit pendiente)
+- Fase 7: Gastos e ingresos del negocio, balance neto consolidado en RD$ (commit: 325f361)
 
 ## Próxima fase
 Fase: Fase 8: Código de barras — lectura
