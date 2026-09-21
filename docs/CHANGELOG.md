@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [0.10.0] - 2026-09-20
+- Implementación completa de la Fase 10: Métodos de pago.
+- Registro de decisión arquitectónica DEC-008: Modelo integral de cobro (`Efectivo`, `Transferencia`, `TarjetaDebito`, `TarjetaCredito`, `PagoMixto`).
+- Creación de entidades `Pago` y `DetallePago`, con relación hacia `Usuario` y `Turno`.
+- Implementación de `IPagoService` y `PagoService`:
+  - Cálculo de devuelta/vuelto en tiempo real en pesos dominicanos (RD$).
+  - Validación de pagos en efectivo impidiendo importes insuficientes y actualizando automáticamente el acumulado de efectivo en el turno activo de caja.
+  - Flujo de transferencia bancaria dominicana (Banreservas, Banco Popular, BHD, etc.) con comprobante, verificación manual de cajero y estado `PendienteVerificacion`.
+  - Distinción de tarjetas Débito / Crédito con número de autorización/referencia de datáfono POS.
+  - Soporte de pagos mixtos/fraccionados con validación de cuadre exacto del total.
+- Creación de formulario modal interactivo `CobroModalForm` con accesos directos de billetes dominicanos, display de devuelta, validaciones y atajos de teclado (`F10`, `Esc`).
+- Suite de 11 nuevas pruebas unitarias para métodos de pago y transferencias (total de 71 pruebas pasando al 100%).
+
 ## [0.9.0] - 2026-09-20
 - Implementación completa de la Fase 9: Código de barras — generación.
 - Registro de decisión arquitectónica DEC-007: Estándar EAN-13, rango de uso interno restringido GS1 (prefijos 20-29), algoritmo Modulo 10 con ponderación 1 y 3 alternada.
