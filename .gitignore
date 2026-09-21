@@ -1,0 +1,22 @@
+## Build and IDE outputs
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Database & Local Config
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+appsettings.Development.json
+appsettings.Local.json
+
+## Logs and test results
+[Tt]est[Rr]esults/
+*.log
