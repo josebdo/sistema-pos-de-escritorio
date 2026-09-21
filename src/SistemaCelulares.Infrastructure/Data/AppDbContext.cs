@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     public DbSet<Rol> Roles => Set<Rol>();
     public DbSet<Permiso> Permisos => Set<Permiso>();
     public DbSet<RolPermiso> RolPermisos => Set<RolPermiso>();
+    public DbSet<Turno> Turnos => Set<Turno>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -72,6 +73,32 @@ public class AppDbContext : DbContext
                   .WithMany(p => p.RolPermisos)
                   .HasForeignKey(rp => rp.PermisoId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuración de Turno
+        modelBuilder.Entity<Turno>(entity =>
+        {
+            entity.ToTable("Turnos");
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.MontoApertura).HasPrecision(18, 2);
+            entity.Property(t => t.TotalVentasEfectivo).HasPrecision(18, 2);
+            entity.Property(t => t.MontoEsperado).HasPrecision(18, 2);
+            entity.Property(t => t.MontoCierre).HasPrecision(18, 2);
+            entity.Property(t => t.Diferencia).HasPrecision(18, 2);
+            entity.Property(t => t.ObservacionesApertura).HasMaxLength(300);
+            entity.Property(t => t.ObservacionesCierre).HasMaxLength(300);
+
+            entity.HasOne(t => t.UsuarioApertura)
+                  .WithMany()
+                  .HasForeignKey(t => t.UsuarioAperturaId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(t => t.UsuarioCierre)
+                  .WithMany()
+                  .HasForeignKey(t => t.UsuarioCierreId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(t => new { t.UsuarioAperturaId, t.Estado });
         });
     }
 }

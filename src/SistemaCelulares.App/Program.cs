@@ -59,10 +59,12 @@ internal static class Program
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUsuarioService, UsuarioService>();
         services.AddScoped<IRolService, RolService>();
+        services.AddScoped<ITurnoService, TurnoService>();
 
         // Formularios
         services.AddTransient<LoginForm>();
         services.AddTransient<UsuariosForm>();
         services.AddTransient<RolesPermisosForm>();
+        services.AddTransient<HistorialTurnosForm>();
     }
 }

@@ -128,7 +128,14 @@ public class MainForm : Form
 
         if (_sesion.TienePermiso(Permisos.TurnosAbrir) || _sesion.TienePermiso(Permisos.TurnosHistorial))
         {
-            CrearBotonMenu(panelMenu, "💵 Caja y Turnos", () => MostrarAvisoFase("Caja y Turnos (Fase 2)", "Este módulo se habilitará en la siguiente fase de desarrollo."));
+            CrearBotonMenu(panelMenu, "💵 Caja y Turnos", () =>
+            {
+                var f = new HistorialTurnosForm(
+                    _serviceProvider.GetRequiredService<ITurnoService>(),
+                    _serviceProvider.GetRequiredService<IUsuarioService>(),
+                    _sesion);
+                AbrirFormularioHijo(f, "Gestión y Arqueo de Turnos de Caja");
+            });
         }
 
         if (_sesion.TienePermiso(Permisos.ProductosVer))
