@@ -13,6 +13,8 @@ public class AppDbContext : DbContext
     public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<Proveedor> Proveedores => Set<Proveedor>();
+    public DbSet<Compra> Compras => Set<Compra>();
+    public DbSet<DetalleCompra> DetalleCompras => Set<DetalleCompra>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -147,6 +149,47 @@ public class AppDbContext : DbContext
             entity.Property(pr => pr.Email).HasMaxLength(100);
             entity.Property(pr => pr.Direccion).HasMaxLength(250);
             entity.Property(pr => pr.Contacto).HasMaxLength(100);
+        });
+
+        // Configuración de Compra
+        modelBuilder.Entity<Compra>(entity =>
+        {
+            entity.ToTable("Compras");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.NumeroFactura).HasMaxLength(50);
+            entity.Property(c => c.Total).HasPrecision(18, 2);
+            entity.Property(c => c.Observaciones).HasMaxLength(300);
+
+            entity.HasOne(c => c.Proveedor)
+                  .WithMany()
+                  .HasForeignKey(c => c.ProveedorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(c => c.Usuario)
+                  .WithMany()
+                  .HasForeignKey(c => c.UsuarioId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(c => c.FechaCompra);
+        });
+
+        // Configuración de DetalleCompra
+        modelBuilder.Entity<DetalleCompra>(entity =>
+        {
+            entity.ToTable("DetalleCompras");
+            entity.HasKey(dc => dc.Id);
+            entity.Property(dc => dc.CostoUnitario).HasPrecision(18, 2);
+            entity.Property(dc => dc.Subtotal).HasPrecision(18, 2);
+
+            entity.HasOne(dc => dc.Compra)
+                  .WithMany(c => c.Detalles)
+                  .HasForeignKey(dc => dc.CompraId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(dc => dc.Producto)
+                  .WithMany()
+                  .HasForeignKey(dc => dc.ProductoId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

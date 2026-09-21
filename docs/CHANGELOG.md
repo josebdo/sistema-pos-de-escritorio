@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [0.4.0] - 2026-09-20
+- Implementación completa de la Fase 4: Proveedores.
+- Creación de la entidad `Proveedor` con campos para razón social, identificación fiscal de República Dominicana (RNC), teléfono, email, dirección, persona de contacto y estado activo.
+- Implementación de `IProveedorService` y `ProveedorService` con validación de RNC único e indexación.
+- Implementación de formularios WinForms para la gestión de proveedores:
+  - `ProveedoresForm`: Listado interactivo con búsqueda en tiempo real (por nombre, RNC, contacto, teléfono), filtro de activos y acciones.
+  - `ProveedorModalForm`: Diálogo de creación y modificación de proveedores.
+- Desactivación lógica de proveedores para garantizar la trazabilidad en compras existentes.
+- Sembrado inicial con 3 distribuidores e importadores clave de celulares y repuestos de República Dominicana.
+- Suite de 5 nuevas pruebas unitarias para proveedores (total de 30 pruebas pasando al 100%).
+
 ## [0.3.0] - 2026-09-20
 - Implementación completa de la Fase 3: Productos, categorías y SKU.
 - Creación de entidades `Categoria` y `Producto` con llaves foráneas, índices únicos en `Sku` y `Nombre` de categoría, e índice en `CodigoBarras`.
@@ -10,7 +21,7 @@
 - Implementación de formularios WinForms para el catálogo:
   - `CategoriasForm` y `CategoriaModalForm`: Administración de categorías y configuración de prefijos de SKU.
   - `ProductosForm` y `ProductoModalForm`: Catálogo visual con búsqueda rápida, filtros de categoría, filtro de alerta de bajo stock, botón de generación de SKU automático y formateo de precios en pesos dominicanos (RD$).
-- Sembrado inicial de categorías comunes de tienda de celulares (Smartphones, Accesorios, Cables, Protectores, Repuestos) y productos demo.
+- Sembrado inicial de categorías comunes de tienda de celulares y productos demo.
 - Suite de 7 nuevas pruebas unitarias para el catálogo (total de 25 pruebas pasando al 100%).
 
 ## [0.2.0] - 2026-09-20

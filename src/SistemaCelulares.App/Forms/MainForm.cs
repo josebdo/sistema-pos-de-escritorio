@@ -161,6 +161,19 @@ public class MainForm : Form
             });
         }
 
+        if (_sesion.TienePermiso(Permisos.ComprasRegistrar) || _sesion.TienePermiso(Permisos.ComprasHistorial))
+        {
+            CrearBotonMenu(panelMenu, "🛒 Compras / Inventario", () =>
+            {
+                var f = new HistorialComprasForm(
+                    _serviceProvider.GetRequiredService<ICompraService>(),
+                    _serviceProvider.GetRequiredService<IProveedorService>(),
+                    _serviceProvider.GetRequiredService<IProductoService>(),
+                    _sesion);
+                AbrirFormularioHijo(f, "Historial y Registro de Compras");
+            });
+        }
+
         if (_sesion.TienePermiso(Permisos.VentasRegistrar) || _sesion.TienePermiso(Permisos.VentasHistorial))
         {
             CrearBotonMenu(panelMenu, "🧾 Ventas / Facturación", () => MostrarAvisoFase("Ventas y Facturación", "Punto de venta y registro de tickets con métodos de pago."));

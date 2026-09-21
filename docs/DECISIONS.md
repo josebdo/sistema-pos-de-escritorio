@@ -29,3 +29,9 @@
 - **Decisión**: Generación automática de SKU basada en prefijo de categoría (ej. `CEL-0001`, `ACC-0001`) con soporte para personalización manual e índice único en base de datos.
 - **Motivo**: Agiliza la creación de productos evitando errores humanos de codificación, a la vez que garantiza la unicidad e integridad del inventario.
 - **Fecha**: 2026-09-20
+
+## DEC-006
+- **Estado**: VIGENTE
+- **Decisión**: Método de costeo de inventario por "último costo". Al registrar una compra a proveedor, el precio de costo del producto existente se actualiza con el costo unitario de la compra más reciente, incrementando el stock sin alterar el precio de venta automáticamente.
+- **Motivo**: Método simple, directo e idóneo para tiendas comerciales de celulares y retail en caja única, preservando los márgenes sin modificaciones sorpresivas de precios al público.
+- **Fecha**: 2026-09-20
