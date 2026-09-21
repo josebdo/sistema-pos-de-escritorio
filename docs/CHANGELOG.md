@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.11.0] - 2026-09-20
+- Implementación completa de la Fase 11: Modo caja única / Multi-caja.
+- Registro de decisión arquitectónica DEC-009: Arquitectura de Conmutación de Modo Caja Única / Multi-Caja y Migración de Datos.
+- Creación de modelos de topología de red `ConfiguracionRedDto`, enum `ModoOperacionCaja` (`CajaUnicaLocal`, `ServidorCentral`, `CajaClienteLan`) y servicio `ConfiguracionRedService` con diagnóstico de conectividad LAN vía sockets TCP.
+- Creación de DTOs de migración `SnapshotTiendaDto` y servicio `DataMigrationService` con cálculo criptográfico de hash SHA-256 para serializar, exportar e importar datos íntegros entre bases de datos locales y el servidor central sin pérdidas de inventario, finanzas, turnos ni usuarios.
+- Creación de la pantalla de configuración de red y topología para Super Admin `ConfiguracionRedMultiCajaForm`, accesible desde `MainForm`.
+- Suite de 7 nuevas pruebas unitarias para conmutación de red, validación de hash de integridad y migración de esquemas (total de 78 pruebas pasando al 100%).
+
 ## [0.10.0] - 2026-09-20
 - Implementación completa de la Fase 10: Métodos de pago.
 - Registro de decisión arquitectónica DEC-008: Modelo integral de cobro (`Efectivo`, `Transferencia`, `TarjetaDebito`, `TarjetaCredito`, `PagoMixto`).

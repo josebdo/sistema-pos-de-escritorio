@@ -12,10 +12,10 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 - xUnit 2.5 (Pruebas unitarias)
 
 ## Estado actual
-Fase: Fase 11: Modo caja única / Multi-caja
+Fase: Fase 12: Ventas, Facturación y Comprobantes Fiscales (NCF)
 Estado: LISTO PARA INICIAR (Esperando confirmación)
-Último commit verificado: 4aae986
-Última actividad: Culminación de la Fase 10 (Métodos de pago) con build y 71 tests unitarios pasando al 100%.
+Último commit verificado: 1c441be
+Última actividad: Culminación de la Fase 11 (Modo caja única / Multi-caja) con build y 78 tests unitarios pasando al 100%.
 Fecha: 2026-09-20
 
 ## Fases completadas
@@ -30,25 +30,27 @@ Fecha: 2026-09-20
 - Fase 8: Código de barras — lectura, helper de escaneo USB y verificador de precios (commit: c29e063)
 - Fase 9: Código de barras — generación EAN-13 GS1 (prefijos 20-29) e impresión de etiquetas térmicas (commit: 37c8038)
 - Fase 10: Métodos de pago (Efectivo con devuelta en RD$, Transferencia verificada, Tarjeta POS y Pagos Mixtos) (commit: 4aae986)
+- Fase 11: Modo caja única / Multi-caja (conmutación LAN, snapshots criptográficos SHA-256 y gestión para Super Admin) (commit: 1c441be)
 
 ## Próxima fase
-Fase: Fase 11: Modo caja única / Multi-caja
-Descripción: Habilitación y conmutación de arquitectura cliente-servidor para operación multi-caja en red local (LAN) administrada exclusivamente por el Super Admin, con soporte de base de datos cliente-servidor (PostgreSQL/SQL Server), migración de datos existentes desde SQLite a la base centralizada sin pérdida de información, y tolerancia a desconexión temporal de red.
+Fase: Fase 12: Ventas, Facturación y Comprobantes Fiscales (NCF)
+Descripción: Sistema completo de Punto de Venta (POS) y Facturación: emisión de tickets de venta, control de inventario en tiempo real (descuento automático de stock), integración con la pasarela de cobro (`CobroModalForm`), vinculación obligatoria a turno de caja activo, soporte de Comprobantes Fiscales de República Dominicana emitidos por DGII (Facturas de Crédito Fiscal B01, Facturas de Consumo B02, Regímenes Especiales B14, Gubernamentales B15) con secuencias correlativas configurables, cálculo de ITBIS (18%) e impresión de tickets térmicos / facturas comerciales.
 Objetivo:
-- Registrar decisión arquitectónica DEC-009 en `docs/DECISIONS.md`.
-- Diseñar la configuración de modo de operación (`ModoCaja`: `CajaUnicaLocal`, `ServidorCentral`, `CajaClienteLan`).
-- Implementar servicio de migración y exportación/importación de datos existentes desde SQLite hacia el motor cliente-servidor.
-- Crear pantalla de configuración de red y topología accesible únicamente para Super Admin (`ConfiguracionRedMultiCajaForm`).
-- Pruebas unitarias para conmutación de proveedor de datos, migración de esquemas y verificación de integridad.
+- Registrar decisión arquitectónica DEC-010 para Comprobantes Fiscales (NCF) y reglas de facturación dominicana.
+- Crear entidades `Venta`, `DetalleVenta`, `ComprobanteFiscalSecuencia`, `TipoComprobanteFiscal` y `Cliente`.
+- Implementar `IVentaService` y `VentaService` con transacciones seguras de descuento de stock, validación de stock disponible, generación de NCF y liquidación de pagos.
+- Desarrollar formulario principal de Punto de Venta `PuntoVentaForm` con buscador rápido por código de barras / SKU / nombre, tabla de carrito de compras, cálculo de subtotales, ITBIS y total en RD$, y botón de cobro (`F12`).
+- Desarrollar pantalla de `HistorialVentasForm` para consulta de tickets, reimpresión y reportes de facturación.
+- Pruebas unitarias completas para ventas, NCF, control de stock e ITBIS.
 
 ## Verificación de la última sesión
 Build: OK (0 advertencias, 0 errores en `SistemaCelulares.sln`)
 Tests ejecutados: dotnet test SistemaCelulares.sln
-Resultado: 71/71 pasaron (100% de éxito)
+Resultado: 78/78 pasaron (100% de éxito)
 Errores pendientes: Ninguno
 
 ## Decisiones arquitectónicas
-Ver `docs/DECISIONS.md` — DEC-001 a DEC-008.
+Ver `docs/DECISIONS.md` — DEC-001 a DEC-009.
 
 ## Base de datos
 Entidades creadas: `Usuario`, `Rol`, `Permiso`, `RolPermiso`, `Turno`, `Categoria`, `Producto`, `Proveedor`, `Compra`, `DetalleCompra`, `CategoriaFinanciera`, `MovimientoFinanciero`, `Pago`, `DetallePago`
