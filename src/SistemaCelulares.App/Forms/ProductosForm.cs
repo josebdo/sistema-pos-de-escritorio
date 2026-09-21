@@ -85,25 +85,31 @@ public class ProductosForm : Form
         // Toolbar
         var toolbar = new Panel { Dock = DockStyle.Top, Height = 55 };
 
-        var lblBuscar = new Label { Text = "🔍 Buscar:", Location = new Point(0, 16), AutoSize = true, Font = UITheme.SectionFont };
+        var lblBuscar = new Label { Text = "🔍 Buscar / Escanear:", Location = new Point(0, 16), AutoSize = true, Font = UITheme.SectionFont };
         toolbar.Controls.Add(lblBuscar);
 
-        _txtBuscar = new TextBox { Location = new Point(70, 13), Size = new Size(220, 28), Font = new Font("Segoe UI", 9.5F) };
+        _txtBuscar = new TextBox { Location = new Point(135, 13), Size = new Size(180, 28), Font = new Font("Segoe UI", 9.5F), PlaceholderText = "Escanear o buscar..." };
         _txtBuscar.TextChanged += (s, e) => FiltrarGrid();
+        BarcodeScannerHelper.ConfigurarParaEscaneo(_txtBuscar, async (codigo) =>
+        {
+            _txtBuscar.Text = codigo;
+            FiltrarGrid();
+            await Task.CompletedTask;
+        });
         toolbar.Controls.Add(_txtBuscar);
 
-        var lblCat = new Label { Text = "Categoría:", Location = new Point(300, 16), AutoSize = true, Font = UITheme.BodyFont };
+        var lblCat = new Label { Text = "Categoría:", Location = new Point(325, 16), AutoSize = true, Font = UITheme.BodyFont };
         toolbar.Controls.Add(lblCat);
 
-        _cbCategorias = new ComboBox { Location = new Point(370, 13), Size = new Size(160, 28), DropDownStyle = ComboBoxStyle.DropDownList };
+        _cbCategorias = new ComboBox { Location = new Point(390, 13), Size = new Size(140, 28), DropDownStyle = ComboBoxStyle.DropDownList };
         _cbCategorias.SelectedIndexChanged += async (s, e) => await RecargarProductosAsync();
         toolbar.Controls.Add(_cbCategorias);
 
-        _chkBajoStock = new CheckBox { Text = "⚠️ Solo bajo stock", Location = new Point(540, 15), Checked = false, AutoSize = true, Font = UITheme.SectionFont, ForeColor = UITheme.Danger };
+        _chkBajoStock = new CheckBox { Text = "⚠️ Bajo stock", Location = new Point(535, 15), Checked = false, AutoSize = true, Font = UITheme.SectionFont, ForeColor = UITheme.Danger };
         _chkBajoStock.CheckedChanged += (s, e) => FiltrarGrid();
         toolbar.Controls.Add(_chkBajoStock);
 
-        _chkSoloActivos = new CheckBox { Text = "Solo activos", Location = new Point(690, 16), Checked = true, AutoSize = true };
+        _chkSoloActivos = new CheckBox { Text = "Activos", Location = new Point(645, 16), Checked = true, AutoSize = true };
         _chkSoloActivos.CheckedChanged += async (s, e) => await RecargarProductosAsync();
         toolbar.Controls.Add(_chkSoloActivos);
 
@@ -112,29 +118,34 @@ public class ProductosForm : Form
         {
             Dock = DockStyle.Right,
             FlowDirection = FlowDirection.RightToLeft,
-            Width = 460,
+            Width = 530,
             Height = 50
         };
 
-        _btnNuevo = new Button { Text = "➕ Nuevo", Size = new Size(100, 38) };
+        _btnNuevo = new Button { Text = "➕ Nuevo", Size = new Size(95, 38) };
         UITheme.AplicarBotonPrimario(_btnNuevo);
         _btnNuevo.Click += async (s, e) => await AbrirCrearProductoAsync();
         _btnNuevo.Visible = _sesionActual.TienePermiso(Permisos.ProductosCrear);
         panelBotones.Controls.Add(_btnNuevo);
 
-        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(95, 38) };
+        var btnVerificador = new Button { Text = "📸 Lector", Size = new Size(95, 38) };
+        UITheme.AplicarBotonSecundario(btnVerificador);
+        btnVerificador.Click += (s, e) => AbrirVerificadorPrecio();
+        panelBotones.Controls.Add(btnVerificador);
+
+        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(85, 38) };
         UITheme.AplicarBotonSecundario(_btnEditar);
         _btnEditar.Click += async (s, e) => await AbrirEditarProductoAsync();
         _btnEditar.Visible = _sesionActual.TienePermiso(Permisos.ProductosEditar);
         panelBotones.Controls.Add(_btnEditar);
 
-        _btnToggleEstado = new Button { Text = "🔄 Activar/Desc.", Size = new Size(125, 38) };
+        _btnToggleEstado = new Button { Text = "🔄 Act/Desc", Size = new Size(105, 38) };
         UITheme.AplicarBotonSecundario(_btnToggleEstado);
         _btnToggleEstado.Click += async (s, e) => await ToggleEstadoProductoAsync();
         _btnToggleEstado.Visible = _sesionActual.TienePermiso(Permisos.ProductosDesactivar);
         panelBotones.Controls.Add(_btnToggleEstado);
 
-        _btnCategorias = new Button { Text = "📁 Categorías", Size = new Size(115, 38) };
+        _btnCategorias = new Button { Text = "📁 Categorías", Size = new Size(110, 38) };
         UITheme.AplicarBotonSecundario(_btnCategorias);
         _btnCategorias.Click += async (s, e) => await AbrirCategoriasFormAsync();
         _btnCategorias.Visible = _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
@@ -333,6 +344,13 @@ public class ProductosForm : Form
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+    }
+
+    private void AbrirVerificadorPrecio()
+    {
+        using var modal = new VerificadorPrecioModalForm(_productoService, _categoriaService, _sesionActual);
+        modal.ShowDialog(this);
+        _ = RecargarProductosAsync();
     }
 
     private async Task AbrirCategoriasFormAsync()

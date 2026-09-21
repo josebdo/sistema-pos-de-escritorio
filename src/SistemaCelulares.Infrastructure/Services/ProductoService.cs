@@ -74,6 +74,25 @@ public class ProductoService : IProductoService
             .FirstOrDefaultAsync(p => p.CodigoBarras != null && p.CodigoBarras.ToLower() == q, cancellationToken);
     }
 
+    public async Task<Producto?> BuscarPorCodigoBarrasOSkuAsync(string codigoOSku, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(codigoOSku)) return null;
+
+        var q = codigoOSku.Trim().ToLower();
+
+        // 1. Intentar por Código de Barras (coincidencia exacta)
+        var productoPorCb = await _context.Productos
+            .Include(p => p.Categoria)
+            .FirstOrDefaultAsync(p => p.CodigoBarras != null && p.CodigoBarras.ToLower() == q, cancellationToken);
+
+        if (productoPorCb != null) return productoPorCb;
+
+        // 2. Intentar por SKU (coincidencia exacta)
+        return await _context.Productos
+            .Include(p => p.Categoria)
+            .FirstOrDefaultAsync(p => p.Sku.ToLower() == q, cancellationToken);
+    }
+
     public async Task<string> GenerarSkuSiguienteAsync(int categoriaId, CancellationToken cancellationToken = default)
     {
         var categoria = await _context.Categorias.FindAsync(new object[] { categoriaId }, cancellationToken);

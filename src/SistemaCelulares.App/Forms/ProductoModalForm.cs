@@ -29,13 +29,20 @@ public class ProductoModalForm : Form
     public ProductoModalForm(
         IProductoService productoService,
         ICategoriaService categoriaService,
-        int? productoId = null)
+        int? productoId = null,
+        string? codigoBarrasInicial = null)
     {
         _productoService = productoService;
         _categoriaService = categoriaService;
         _productoIdParaEditar = productoId;
 
         InitializeCustomComponents();
+
+        if (!string.IsNullOrWhiteSpace(codigoBarrasInicial))
+        {
+            _txtCodigoBarras.Text = codigoBarrasInicial.Trim();
+        }
+
         Load += async (s, e) =>
         {
             await CargarCategoriasAsync();

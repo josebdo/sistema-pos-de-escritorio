@@ -12,10 +12,10 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 - xUnit 2.5 (Pruebas unitarias)
 
 ## Estado actual
-Fase: Fase 8: Código de barras — lectura
+Fase: Fase 9: Código de barras — generación
 Estado: LISTO PARA INICIAR (Esperando confirmación)
-Último commit verificado: 325f361
-Última actividad: Culminación de la Fase 7 (Gastos e ingresos del negocio) con build y 42 tests unitarios pasando al 100%.
+Último commit verificado: Fase 8 completada
+Última actividad: Culminación de la Fase 8 (Código de barras — lectura) con build y 47 tests unitarios pasando al 100%.
 Fecha: 2026-09-20
 
 ## Fases completadas
@@ -27,20 +27,21 @@ Fecha: 2026-09-20
 - Fase 5: Compras a proveedor con incremento de stock y costeo "último costo" (commit: 83b13ba)
 - Fase 6: Alertas de stock mínimo, criticidad y análisis de reposición (commit: 57daa88)
 - Fase 7: Gastos e ingresos del negocio, balance neto consolidado en RD$ (commit: 325f361)
+- Fase 8: Código de barras — lectura, helper de escaneo USB y verificador de precios (commit pendiente)
 
 ## Próxima fase
-Fase: Fase 8: Código de barras — lectura
-Descripción: Lectura de códigos de barras mediante lectores USB (modo emulación de teclado con sufijo Enter) para identificar productos instantáneamente en ventas, compras e inventario.
+Fase: Fase 9: Código de barras — generación
+Descripción: Generación automática de códigos de barras estándar EAN-13 para productos propios o sin código de fábrica, utilizando el rango de uso interno restringido GS1 (prefijo 20-29), cálculo de checksum y renderizado gráfico / impresión de etiquetas.
 Objetivo:
-- Servicio o helper de captura de escaneo (`BarcodeScannerListener` / `IBusquedaProductoService`).
-- Detección de producto por código de barras o SKU en milisegundos.
-- Integración en formularios de búsqueda rápida y selección de producto.
-- Manejo de productos no encontrados con opción de registro rápido.
+- Registrar decisión arquitectónica DEC-007 (EAN-13, rango GS1 20-29, algoritmo Modulo 10).
+- Servicio `IEan13GeneratorService` para cálculo de dígito verificador y generación de secuencias sin colisión.
+- Generador de imagen/renderizado de código de barras (System.Drawing Bitmap) para vista previa e impresión de etiquetas con nombre de producto y precio RD$.
+- Integración en `ProductoModalForm` y botón de impresión en `ProductosForm`.
 
 ## Verificación de la última sesión
 Build: OK (0 advertencias, 0 errores en `SistemaCelulares.sln`)
 Tests ejecutados: dotnet test SistemaCelulares.sln
-Resultado: 42/42 pasaron (100% de éxito)
+Resultado: 47/47 pasaron (100% de éxito)
 Errores pendientes: Ninguno
 
 ## Decisiones arquitectónicas
@@ -62,8 +63,8 @@ Librerías instaladas:
 - Microsoft.EntityFrameworkCore.InMemory (8.0.13)
 
 ## Cambios recientes
-Implementación completa de la Fase 7 (Control financiero con registro de gastos operativos e ingresos adicionales, consolidación de compras a proveedores, cálculo de balance neto y 42 pruebas unitarias al 100%).
+Implementación completa de la Fase 8 (Lectura de códigos de barras USB con supresión de beep, búsqueda unificada por código o SKU, verificador de precios/stock y 47 pruebas unitarias al 100%).
 
 ## Notas importantes
 - Moneda por defecto: Peso Dominicano (RD$ / DOP) con formato regional `es-DO`.
-- Solo los roles autorizados (Admin, Super Admin o con permiso explícito `Finanzas.ReportesVer`) pueden visualizar la información financiera sensible.
+- Los lectores USB de códigos de barras operan en modo emulación de teclado enviando la secuencia de dígitos seguida de Enter.

@@ -8,6 +8,7 @@ public interface IProductoService
     Task<Producto?> ObtenerPorIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Producto?> ObtenerPorSkuAsync(string sku, CancellationToken cancellationToken = default);
     Task<Producto?> ObtenerPorCodigoBarrasAsync(string codigoBarras, CancellationToken cancellationToken = default);
+    Task<Producto?> BuscarPorCodigoBarrasOSkuAsync(string codigoOSku, CancellationToken cancellationToken = default);
     Task<string> GenerarSkuSiguienteAsync(int categoriaId, CancellationToken cancellationToken = default);
     Task<Producto> CrearProductoAsync(
         string nombre,

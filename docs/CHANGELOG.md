@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.8.0] - 2026-09-20
+- Implementación completa de la Fase 8: Código de barras — lectura.
+- Implementación de método de búsqueda optimizada `BuscarPorCodigoBarrasOSkuAsync` en `IProductoService` y `ProductoService`.
+- Creación de `BarcodeScannerHelper` para manejo de lectores físicos USB en modo emulación de teclado con supresión de alerta auditiva de Windows y despacho automático en Enter.
+- Creación del formulario `VerificadorPrecioModalForm` (Lector de Códigos de Barras y Verificador de Precios y Stock al Público), con display de precio en RD$, disponibilidad de inventario y opción de registro directo de productos no encontrados con código pre-cargado.
+- Integración del escáner en la barra de herramientas de `ProductosForm` y soporte para código de barras inicial en `ProductoModalForm`.
+- Suite de 5 nuevas pruebas unitarias para lectura y resolución de código de barras / SKU (total de 47 pruebas pasando al 100%).
+
 ## [0.7.0] - 2026-09-20
 - Implementación completa de la Fase 7: Gastos e ingresos del negocio.
 - Creación de entidades `CategoriaFinanciera` (Gastos e Ingresos) y `MovimientoFinanciero` con soporte para comprobantes y trazabilidad de usuario.
