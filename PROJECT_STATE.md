@@ -14,7 +14,7 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 ## Estado actual
 Fase: Fase 9: Código de barras — generación
 Estado: LISTO PARA INICIAR (Esperando confirmación)
-Último commit verificado: Fase 8 completada
+Último commit verificado: c29e063
 Última actividad: Culminación de la Fase 8 (Código de barras — lectura) con build y 47 tests unitarios pasando al 100%.
 Fecha: 2026-09-20
 
@@ -27,7 +27,7 @@ Fecha: 2026-09-20
 - Fase 5: Compras a proveedor con incremento de stock y costeo "último costo" (commit: 83b13ba)
 - Fase 6: Alertas de stock mínimo, criticidad y análisis de reposición (commit: 57daa88)
 - Fase 7: Gastos e ingresos del negocio, balance neto consolidado en RD$ (commit: 325f361)
-- Fase 8: Código de barras — lectura, helper de escaneo USB y verificador de precios (commit pendiente)
+- Fase 8: Código de barras — lectura, helper de escaneo USB y verificador de precios (commit: c29e063)
 
 ## Próxima fase
 Fase: Fase 9: Código de barras — generación
