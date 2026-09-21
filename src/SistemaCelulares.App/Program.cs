@@ -68,6 +68,8 @@ internal static class Program
         services.AddScoped<IFinanzasService, FinanzasService>();
         services.AddScoped<IEan13GeneratorService, Ean13GeneratorService>();
         services.AddScoped<IPagoService, PagoService>();
+        services.AddSingleton<IConfiguracionRedService, ConfiguracionRedService>();
+        services.AddScoped<IDataMigrationService, DataMigrationService>();
 
         // Formularios
         services.AddTransient<LoginForm>();
@@ -79,5 +81,6 @@ internal static class Program
         services.AddTransient<HistorialComprasForm>();
         services.AddTransient<AlertasStockForm>();
         services.AddTransient<FinanzasForm>();
+        services.AddTransient<ConfiguracionRedMultiCajaForm>();
     }
 }

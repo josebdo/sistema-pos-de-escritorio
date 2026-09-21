@@ -51,3 +51,19 @@
   4. **Pagos Mixtos**: Validación estricta de que los importes parciales cubran el total exacto de la operación.
 - **Motivo**: Flexibilidad operativa en punto de venta y control riguroso de cuadre de caja conforme a las prácticas comerciales de República Dominicana.
 - **Fecha**: 2026-09-20
+
+## DEC-009
+- **Estado**: VIGENTE
+- **Decisión**: Arquitectura de Conmutación de Modo Caja Única / Multi-Caja y Migración de Datos.
+  1. **Topología de red**:
+     - `CajaUnicaLocal`: Instancia autónoma usando SQLite local (`sistema_celulares.db`) con Caja ID = 1.
+     - `ServidorCentral`: PC principal que aloja la base de datos centralizada en la red local (LAN) y asigna turnos y ventas a cada caja.
+     - `CajaClienteLan`: Terminal punto de venta en red local conectada a la IP/Host del Servidor Central con identificación única (`CajaId`, `NombreCaja`).
+  2. **Control exclusivo**:
+     - Únicamente el **Super Admin** puede conmutar el modo de operación y configurar los parámetros de red.
+  3. **Migración de datos**:
+     - Implementación de `IDataMigrationService` y `DataMigrationService` para generar instantáneas integrales (`SnapshotTiendaDto`) de la base de datos en JSON criptográficamente validado (SHA-256) e importarlas en la nueva base centralizada preservando llaves, historial de turnos, inventario, finanzas y compras.
+  4. **Tolerancia y Diagnóstico**:
+     - Verificación activa de conectividad (`ProbarConexionAsync`) con reintentos controlados para evitar caídas abruptas del aplicativo ante fallas de red local.
+- **Motivo**: Permitir la expansión de negocios desde 1 sola PC a múltiples cajas simultáneas sin perder datos ni requerir reinstalación manual.
+- **Fecha**: 2026-09-20

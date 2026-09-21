@@ -205,6 +205,17 @@ public class MainForm : Form
             });
         }
 
+        if (_sesion.EsSuperAdmin)
+        {
+            CrearBotonMenu(panelMenu, "🌐 Red y Multi-Caja", () =>
+            {
+                var f = new ConfiguracionRedMultiCajaForm(
+                    _serviceProvider.GetRequiredService<IConfiguracionRedService>(),
+                    _serviceProvider.GetRequiredService<IDataMigrationService>());
+                f.ShowDialog(this);
+            });
+        }
+
         _panelSidebar.Controls.Add(panelMenu);
 
         // Botón Cerrar Sesión en Bottom del Sidebar
