@@ -12,6 +12,7 @@ public class ProductosForm : Form
 {
     private readonly IProductoService _productoService;
     private readonly ICategoriaService _categoriaService;
+    private readonly IEan13GeneratorService _ean13Service;
     private readonly SesionUsuario _sesionActual;
 
     private DataGridView _gridProductos = null!;
@@ -25,16 +26,19 @@ public class ProductosForm : Form
     private Button _btnEditar = null!;
     private Button _btnToggleEstado = null!;
     private Button _btnCategorias = null!;
+    private Button _btnImprimirEtiqueta = null!;
 
     private List<Producto> _listaProductos = new();
 
     public ProductosForm(
         IProductoService productoService,
         ICategoriaService categoriaService,
+        IEan13GeneratorService ean13Service,
         SesionUsuario sesionActual)
     {
         _productoService = productoService;
         _categoriaService = categoriaService;
+        _ean13Service = ean13Service;
         _sesionActual = sesionActual;
 
         InitializeCustomComponents();
@@ -118,34 +122,39 @@ public class ProductosForm : Form
         {
             Dock = DockStyle.Right,
             FlowDirection = FlowDirection.RightToLeft,
-            Width = 530,
+            Width = 620,
             Height = 50
         };
 
-        _btnNuevo = new Button { Text = "➕ Nuevo", Size = new Size(95, 38) };
+        _btnNuevo = new Button { Text = "➕ Nuevo", Size = new Size(90, 38) };
         UITheme.AplicarBotonPrimario(_btnNuevo);
         _btnNuevo.Click += async (s, e) => await AbrirCrearProductoAsync();
         _btnNuevo.Visible = _sesionActual.TienePermiso(Permisos.ProductosCrear);
         panelBotones.Controls.Add(_btnNuevo);
 
-        var btnVerificador = new Button { Text = "📸 Lector", Size = new Size(95, 38) };
+        _btnImprimirEtiqueta = new Button { Text = "🏷️ Etiqueta", Size = new Size(95, 38) };
+        UITheme.AplicarBotonSecundario(_btnImprimirEtiqueta);
+        _btnImprimirEtiqueta.Click += (s, e) => AbrirImprimirEtiqueta();
+        panelBotones.Controls.Add(_btnImprimirEtiqueta);
+
+        var btnVerificador = new Button { Text = "📸 Lector", Size = new Size(85, 38) };
         UITheme.AplicarBotonSecundario(btnVerificador);
         btnVerificador.Click += (s, e) => AbrirVerificadorPrecio();
         panelBotones.Controls.Add(btnVerificador);
 
-        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(85, 38) };
+        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(80, 38) };
         UITheme.AplicarBotonSecundario(_btnEditar);
         _btnEditar.Click += async (s, e) => await AbrirEditarProductoAsync();
         _btnEditar.Visible = _sesionActual.TienePermiso(Permisos.ProductosEditar);
         panelBotones.Controls.Add(_btnEditar);
 
-        _btnToggleEstado = new Button { Text = "🔄 Act/Desc", Size = new Size(105, 38) };
+        _btnToggleEstado = new Button { Text = "🔄 Act/Desc", Size = new Size(95, 38) };
         UITheme.AplicarBotonSecundario(_btnToggleEstado);
         _btnToggleEstado.Click += async (s, e) => await ToggleEstadoProductoAsync();
         _btnToggleEstado.Visible = _sesionActual.TienePermiso(Permisos.ProductosDesactivar);
         panelBotones.Controls.Add(_btnToggleEstado);
 
-        _btnCategorias = new Button { Text = "📁 Categorías", Size = new Size(110, 38) };
+        _btnCategorias = new Button { Text = "📁 Categorías", Size = new Size(100, 38) };
         UITheme.AplicarBotonSecundario(_btnCategorias);
         _btnCategorias.Click += async (s, e) => await AbrirCategoriasFormAsync();
         _btnCategorias.Visible = _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
@@ -287,7 +296,7 @@ public class ProductosForm : Form
 
     private async Task AbrirCrearProductoAsync()
     {
-        var modal = new ProductoModalForm(_productoService, _categoriaService);
+        var modal = new ProductoModalForm(_productoService, _categoriaService, _ean13Service);
         if (modal.ShowDialog(this) == DialogResult.OK)
         {
             await RecargarProductosAsync();
@@ -303,10 +312,36 @@ public class ProductosForm : Form
             return;
         }
 
-        var modal = new ProductoModalForm(_productoService, _categoriaService, prod.Id);
+        var modal = new ProductoModalForm(_productoService, _categoriaService, _ean13Service, prod.Id);
         if (modal.ShowDialog(this) == DialogResult.OK)
         {
             await RecargarProductosAsync();
+        }
+    }
+
+    private void AbrirImprimirEtiqueta()
+    {
+        var prod = ObtenerProductoSeleccionado();
+        if (prod == null)
+        {
+            MessageBox.Show("Por favor seleccione un producto del catálogo para generar su etiqueta.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(prod.CodigoBarras))
+        {
+            MessageBox.Show($"El producto '{prod.Nombre}' no tiene un código de barras asignado.\nPuede editarlo y presionar '⚡ EAN-13' para generarle uno.", "Sin Código de Barras", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        try
+        {
+            using var modal = new ImprimirEtiquetaModalForm(prod);
+            modal.ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error al generar etiqueta: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 

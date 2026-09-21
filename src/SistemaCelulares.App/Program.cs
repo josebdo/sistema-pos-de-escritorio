@@ -66,6 +66,7 @@ internal static class Program
         services.AddScoped<ICompraService, CompraService>();
         services.AddScoped<IAlertaStockService, AlertaStockService>();
         services.AddScoped<IFinanzasService, FinanzasService>();
+        services.AddScoped<IEan13GeneratorService, Ean13GeneratorService>();
 
         // Formularios
         services.AddTransient<LoginForm>();

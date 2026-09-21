@@ -145,6 +145,7 @@ public class MainForm : Form
                 var f = new ProductosForm(
                     _serviceProvider.GetRequiredService<IProductoService>(),
                     _serviceProvider.GetRequiredService<ICategoriaService>(),
+                    _serviceProvider.GetRequiredService<IEan13GeneratorService>(),
                     _sesion);
                 AbrirFormularioHijo(f, "Catálogo de Productos e Inventario");
             });

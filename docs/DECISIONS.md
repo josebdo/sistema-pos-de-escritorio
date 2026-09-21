@@ -35,3 +35,9 @@
 - **Decisión**: Método de costeo de inventario por "último costo". Al registrar una compra a proveedor, el precio de costo del producto existente se actualiza con el costo unitario de la compra más reciente, incrementando el stock sin alterar el precio de venta automáticamente.
 - **Motivo**: Método simple, directo e idóneo para tiendas comerciales de celulares y retail en caja única, preservando los márgenes sin modificaciones sorpresivas de precios al público.
 - **Fecha**: 2026-09-20
+
+## DEC-007
+- **Estado**: VIGENTE
+- **Decisión**: Estándar de código de barras **EAN-13** (GS1) para productos del inventario. Para productos propios o sin código de fábrica, se utiliza el rango de uso interno/restringido reservado universalmente por GS1 (prefijo `20` a `29`), calculando el 13.° dígito verificador mediante el algoritmo canónico **Modulo 10** (ponderación 1 y 3 alternada).
+- **Motivo**: Garantiza compatibilidad universal con lectores ópticos USB estándar y terminales de punto de venta en República Dominicana, evitando colisiones con códigos de barras comerciales emitidos por fabricantes externos.
+- **Fecha**: 2026-09-20

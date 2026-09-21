@@ -10,6 +10,7 @@ public class ProductoModalForm : Form
 {
     private readonly IProductoService _productoService;
     private readonly ICategoriaService _categoriaService;
+    private readonly IEan13GeneratorService? _ean13Service;
     private readonly int? _productoIdParaEditar;
 
     private TextBox _txtNombre = null!;
@@ -17,6 +18,7 @@ public class ProductoModalForm : Form
     private TextBox _txtSku = null!;
     private Button _btnGenerarSku = null!;
     private TextBox _txtCodigoBarras = null!;
+    private Button _btnGenerarEan13 = null!;
     private NumericUpDown _numPrecioCosto = null!;
     private NumericUpDown _numPrecioVenta = null!;
     private Label _lblMargen = null!;
@@ -29,11 +31,13 @@ public class ProductoModalForm : Form
     public ProductoModalForm(
         IProductoService productoService,
         ICategoriaService categoriaService,
+        IEan13GeneratorService? ean13Service = null,
         int? productoId = null,
         string? codigoBarrasInicial = null)
     {
         _productoService = productoService;
         _categoriaService = categoriaService;
+        _ean13Service = ean13Service;
         _productoIdParaEditar = productoId;
 
         InitializeCustomComponents();
@@ -174,11 +178,16 @@ public class ProductoModalForm : Form
         panelPrincipal.Controls.Add(_numCantidadMinima);
 
         // Código de Barras
-        var lblBarras = new Label { Text = "Código de Barras EAN-13 (opcional / escaneo)", Font = UITheme.BodyFont, Location = new Point(0, 295), AutoSize = true };
+        var lblBarras = new Label { Text = "Código de Barras EAN-13 (opcional / escaneo / generación)", Font = UITheme.BodyFont, Location = new Point(0, 295), AutoSize = true };
         panelPrincipal.Controls.Add(lblBarras);
 
-        _txtCodigoBarras = new TextBox { Location = new Point(0, 317), Size = new Size(520, 28) };
+        _txtCodigoBarras = new TextBox { Location = new Point(0, 317), Size = new Size(390, 28) };
         panelPrincipal.Controls.Add(_txtCodigoBarras);
+
+        _btnGenerarEan13 = new Button { Text = "⚡ EAN-13", Location = new Point(400, 315), Size = new Size(120, 30) };
+        UITheme.AplicarBotonSecundario(_btnGenerarEan13);
+        _btnGenerarEan13.Click += async (s, e) => await GenerarEan13AutomaticoAsync();
+        panelPrincipal.Controls.Add(_btnGenerarEan13);
 
         // Descripción
         var lblDesc = new Label { Text = "Descripción / Especificaciones (opcional)", Font = UITheme.BodyFont, Location = new Point(0, 355), AutoSize = true };
@@ -249,6 +258,22 @@ public class ProductoModalForm : Form
             catch
             {
                 // Ignorar si aún no hay categorías cargadas
+            }
+        }
+    }
+
+    private async Task GenerarEan13AutomaticoAsync()
+    {
+        if (_ean13Service != null)
+        {
+            try
+            {
+                var ean13 = await _ean13Service.GenerarEan13InternoAsync();
+                _txtCodigoBarras.Text = ean13;
+            }
+            catch (Exception ex)
+            {
+                _lblError.Text = "Error al generar código EAN-13: " + ex.Message;
             }
         }
     }
