@@ -150,6 +150,20 @@ public class MainForm : Form
             });
         }
 
+        if (_sesion.TienePermiso(Permisos.AlertasStockVer))
+        {
+            CrearBotonMenu(panelMenu, "⚠️ Alertas de Stock", () =>
+            {
+                var f = new AlertasStockForm(
+                    _serviceProvider.GetRequiredService<IAlertaStockService>(),
+                    _serviceProvider.GetRequiredService<ICompraService>(),
+                    _serviceProvider.GetRequiredService<IProveedorService>(),
+                    _serviceProvider.GetRequiredService<IProductoService>(),
+                    _sesion);
+                AbrirFormularioHijo(f, "Alertas de Stock Mínimo y Reabastecimiento");
+            });
+        }
+
         if (_sesion.TienePermiso(Permisos.ProveedoresGestionar))
         {
             CrearBotonMenu(panelMenu, "🚚 Proveedores", () =>

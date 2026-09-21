@@ -64,6 +64,7 @@ internal static class Program
         services.AddScoped<IProductoService, ProductoService>();
         services.AddScoped<IProveedorService, ProveedorService>();
         services.AddScoped<ICompraService, CompraService>();
+        services.AddScoped<IAlertaStockService, AlertaStockService>();
 
         // Formularios
         services.AddTransient<LoginForm>();
@@ -73,5 +74,6 @@ internal static class Program
         services.AddTransient<ProductosForm>();
         services.AddTransient<ProveedoresForm>();
         services.AddTransient<HistorialComprasForm>();
+        services.AddTransient<AlertasStockForm>();
     }
 }
