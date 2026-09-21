@@ -195,7 +195,13 @@ public class MainForm : Form
 
         if (_sesion.TienePermiso(Permisos.FinanzasReportesVer))
         {
-            CrearBotonMenu(panelMenu, "📊 Finanzas y Reportes", () => MostrarAvisoFase("Finanzas y Reportes (Fase 7)", "Gastos fijos, ingresos y reportes de rentabilidad."));
+            CrearBotonMenu(panelMenu, "📊 Finanzas y Reportes", () =>
+            {
+                var f = new FinanzasForm(
+                    _serviceProvider.GetRequiredService<IFinanzasService>(),
+                    _sesion);
+                AbrirFormularioHijo(f, "Control Financiero, Gastos e Ingresos");
+            });
         }
 
         _panelSidebar.Controls.Add(panelMenu);
@@ -372,10 +378,10 @@ public class MainForm : Form
             AutoSize = true
         };
 
-        flowCards.Controls.Add(CrearTarjetaEstado("🛡️ Seguridad y Roles (Fase 1)", "COMPLETADA", "RBAC activo, contraseñas seguras BCrypt y cambio obligatorio.", UITheme.Success));
-        flowCards.Controls.Add(CrearTarjetaEstado("💵 Turnos y Caja (Fase 2)", "PRÓXIMA", "Apertura, arqueo y cierre de caja por turno.", UITheme.Warning));
-        flowCards.Controls.Add(CrearTarjetaEstado("📦 Catálogo y SKU (Fase 3)", "PLANIFICADA", "Gestión de celulares, accesorios, SKU y alertas.", UITheme.TextMuted));
-        flowCards.Controls.Add(CrearTarjetaEstado("🚚 Compras y Stock (Fase 4 y 5)", "PLANIFICADA", "Proveedores, compras e incremento de inventario.", UITheme.TextMuted));
+        flowCards.Controls.Add(CrearTarjetaEstado("🛡️ Seguridad y RBAC (F1)", "ACTIVO", "Usuarios, permisos granulares y contraseñas BCrypt.", UITheme.Success));
+        flowCards.Controls.Add(CrearTarjetaEstado("💵 Turnos y Caja (F2)", "ACTIVO", "Apertura, arqueo y cierre con cálculo de diferencias.", UITheme.Success));
+        flowCards.Controls.Add(CrearTarjetaEstado("📦 Catálogo y Stock (F3-F6)", "ACTIVO", "SKU automático, proveedores, compras y alertas stock.", UITheme.Success));
+        flowCards.Controls.Add(CrearTarjetaEstado("📊 Finanzas y Gastos (F7)", "ACTIVO", "Gastos operativos, ingresos y balance neto en RD$.", UITheme.Success));
 
         panelDashboard.Controls.Add(flowCards);
         _panelContenido.Controls.Add(panelDashboard);

@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<Proveedor> Proveedores => Set<Proveedor>();
     public DbSet<Compra> Compras => Set<Compra>();
     public DbSet<DetalleCompra> DetalleCompras => Set<DetalleCompra>();
+    public DbSet<CategoriaFinanciera> CategoriasFinancieras => Set<CategoriaFinanciera>();
+    public DbSet<MovimientoFinanciero> MovimientosFinancieros => Set<MovimientoFinanciero>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -190,6 +192,38 @@ public class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(dc => dc.ProductoId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuración de CategoriaFinanciera
+        modelBuilder.Entity<CategoriaFinanciera>(entity =>
+        {
+            entity.ToTable("CategoriasFinancieras");
+            entity.HasKey(cf => cf.Id);
+            entity.Property(cf => cf.Nombre).IsRequired().HasMaxLength(100);
+            entity.Property(cf => cf.Descripcion).HasMaxLength(250);
+            entity.HasIndex(cf => new { cf.Nombre, cf.Tipo }).IsUnique();
+        });
+
+        // Configuración de MovimientoFinanciero
+        modelBuilder.Entity<MovimientoFinanciero>(entity =>
+        {
+            entity.ToTable("MovimientosFinancieros");
+            entity.HasKey(mf => mf.Id);
+            entity.Property(mf => mf.Monto).HasPrecision(18, 2);
+            entity.Property(mf => mf.Descripcion).IsRequired().HasMaxLength(200);
+            entity.Property(mf => mf.NumeroComprobante).HasMaxLength(50);
+
+            entity.HasOne(mf => mf.CategoriaFinanciera)
+                  .WithMany(cf => cf.Movimientos)
+                  .HasForeignKey(mf => mf.CategoriaFinancieraId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(mf => mf.Usuario)
+                  .WithMany()
+                  .HasForeignKey(mf => mf.UsuarioId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(mf => mf.Fecha);
         });
     }
 }

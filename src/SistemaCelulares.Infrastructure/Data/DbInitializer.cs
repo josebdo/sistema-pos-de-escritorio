@@ -269,5 +269,28 @@ public static class DbInitializer
 
             await context.SaveChangesAsync();
         }
+
+        // 7. Sembrar Categorías Financieras Iniciales (Gastos e Ingresos)
+        if (!await context.CategoriasFinancieras.AnyAsync())
+        {
+            context.CategoriasFinancieras.AddRange(
+                // Gastos Operativos
+                new CategoriaFinanciera { Nombre = "Alquiler de Local", Tipo = TipoMovimientoFinanciero.Gasto, Descripcion = "Pago mensual del local comercial", Activo = true },
+                new CategoriaFinanciera { Nombre = "Electricidad / Luz", Tipo = TipoMovimientoFinanciero.Gasto, Descripcion = "Factura de energía eléctrica (EDESUR/EDEESTE/EDENORTE)", Activo = true },
+                new CategoriaFinanciera { Nombre = "Internet y Telefonía", Tipo = TipoMovimientoFinanciero.Gasto, Descripcion = "Servicios de telecomunicaciones del negocio", Activo = true },
+                new CategoriaFinanciera { Nombre = "Nómina y Salarios", Tipo = TipoMovimientoFinanciero.Gasto, Descripcion = "Pago a empleados, comisiones de personal", Activo = true },
+                new CategoriaFinanciera { Nombre = "Mantenimiento y Reparaciones", Tipo = TipoMovimientoFinanciero.Gasto, Descripcion = "Mantenimiento del local, aire acondicionado, herramientas", Activo = true },
+                new CategoriaFinanciera { Nombre = "Comisiones y Servicios Bancarios", Tipo = TipoMovimientoFinanciero.Gasto, Descripcion = "Comisiones de verifone, transferencias, mantenimiento de cuenta", Activo = true },
+                new CategoriaFinanciera { Nombre = "Transporte y Envíos", Tipo = TipoMovimientoFinanciero.Gasto, Descripcion = "Fletes de mercancía, mensajería y combustible", Activo = true },
+                new CategoriaFinanciera { Nombre = "Otros Gastos Operativos", Tipo = TipoMovimientoFinanciero.Gasto, Descripcion = "Gastos misceláneos y menores del día a día", Activo = true },
+
+                // Ingresos Adicionales
+                new CategoriaFinanciera { Nombre = "Servicio Técnico y Reparaciones", Tipo = TipoMovimientoFinanciero.Ingreso, Descripcion = "Mano de obra por reparación y cambio de pantallas/piezas", Activo = true },
+                new CategoriaFinanciera { Nombre = "Desbloqueos y Flasheo", Tipo = TipoMovimientoFinanciero.Ingreso, Descripcion = "Servicios de software, desbloqueo de red y cuentas", Activo = true },
+                new CategoriaFinanciera { Nombre = "Otros Ingresos", Tipo = TipoMovimientoFinanciero.Ingreso, Descripcion = "Ingresos varios no provenientes de venta de inventario", Activo = true }
+            );
+
+            await context.SaveChangesAsync();
+        }
     }
 }

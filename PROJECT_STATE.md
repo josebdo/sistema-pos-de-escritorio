@@ -12,10 +12,10 @@ Descripción: Aplicación de escritorio en WinForms .NET 8 / C# con SQLite y Ent
 - xUnit 2.5 (Pruebas unitarias)
 
 ## Estado actual
-Fase: Fase 6: Alertas de stock mínimo
-Estado: EN PROGRESO
-Último commit verificado: 83b13ba
-Última actividad: Culminación de la Fase 5 (Compras a proveedor) con build y 34 tests unitarios pasando al 100%.
+Fase: Fase 8: Código de barras — lectura
+Estado: LISTO PARA INICIAR (Esperando confirmación)
+Último commit verificado: Fase 7 completada
+Última actividad: Culminación de la Fase 7 (Gastos e ingresos del negocio) con build y 42 tests unitarios pasando al 100%.
 Fecha: 2026-09-20
 
 ## Fases completadas
@@ -25,36 +25,30 @@ Fecha: 2026-09-20
 - Fase 3: Productos, categorías y SKU con generación automática e índice único (commit: 5095c48)
 - Fase 4: Proveedores comerciales con soporte para RNC dominicano y desactivación lógica (commit: d2227ad)
 - Fase 5: Compras a proveedor con incremento de stock y costeo "último costo" (commit: 83b13ba)
+- Fase 6: Alertas de stock mínimo, criticidad y análisis de reposición (commit: 57daa88)
+- Fase 7: Gastos e ingresos del negocio, balance neto consolidado en RD$ (commit pendiente)
 
-## Fase actual
-Descripción: Sistema dedicado de alertas y visualización de productos en o por debajo de su cantidad mínima de stock para reabastecimiento oportuno.
-Objetivo: Pantalla centralizada de alertas de stock bajo con cálculo de unidades faltantes para nivel óptimo, indicador visual en el panel principal (MainForm) para roles con permiso (`AlertasStock.Ver`), y acceso directo a generar orden de compra a proveedor.
-Definition of Ready (qué debía estar resuelto antes de empezar esta fase):
-- [x] Fase 3 (Productos con `StockActual` y `CantidadMinima`) y Fase 5 (Compras) COMPLETADAS.
-- [x] Permiso `AlertasStock.Ver` registrado en catálogo canónico de RBAC.
-Tareas completadas:
-- [x] Consulta base `ObtenerProductosBajoStockAsync` implementada en `IProductoService`.
-Tareas pendientes:
-- [ ] Implementación de `IAlertaStockService` / métodos de análisis de reabastecimiento (unidades sugeridas a pedir).
-- [ ] Formulario WinForms `AlertasStockForm` con vista de productos críticos y botón de compra directa a proveedor.
-- [ ] Notificador / Badge de alerta visual en el panel principal de `MainForm.cs`.
-- [ ] Pruebas unitarias para detección y cálculo de requerimiento de stock.
-
-## Próximo paso
-Confirmar con el usuario el inicio del desarrollo de la Fase 6 (Alertas de stock mínimo), implementar la pantalla de alertas y el enlace directo con compras.
+## Próxima fase
+Fase: Fase 8: Código de barras — lectura
+Descripción: Lectura de códigos de barras mediante lectores USB (modo emulación de teclado con sufijo Enter) para identificar productos instantáneamente en ventas, compras e inventario.
+Objetivo:
+- Servicio o helper de captura de escaneo (`BarcodeScannerListener` / `IBusquedaProductoService`).
+- Detección de producto por código de barras o SKU en milisegundos.
+- Integración en formularios de búsqueda rápida y selección de producto.
+- Manejo de productos no encontrados con opción de registro rápido.
 
 ## Verificación de la última sesión
 Build: OK (0 advertencias, 0 errores en `SistemaCelulares.sln`)
 Tests ejecutados: dotnet test SistemaCelulares.sln
-Resultado: 34/34 pasaron (100% de éxito)
+Resultado: 42/42 pasaron (100% de éxito)
 Errores pendientes: Ninguno
 
 ## Decisiones arquitectónicas
-Ver `docs/DECISIONS.md` — DEC-001 (SQLite), DEC-002 (EF Core), DEC-003 (Localización RD), DEC-004 (RBAC y BCrypt), DEC-005 (Generación de SKU), DEC-006 (Método de costeo: último costo).
+Ver `docs/DECISIONS.md` — DEC-001 a DEC-006.
 
 ## Base de datos
-Entidades creadas: `Usuario`, `Rol`, `Permiso`, `RolPermiso`, `Turno`, `Categoria`, `Producto`, `Proveedor`, `Compra`, `DetalleCompra`
-Última migración: Esquema con compras a proveedor y detalle de transacciones
+Entidades creadas: `Usuario`, `Rol`, `Permiso`, `RolPermiso`, `Turno`, `Categoria`, `Producto`, `Proveedor`, `Compra`, `DetalleCompra`, `CategoriaFinanciera`, `MovimientoFinanciero`
+Última migración: Esquema completo con finanzas, inventario, turnos, compras y proveedores
 
 ## Problemas conocidos
 Ninguno.
@@ -68,8 +62,8 @@ Librerías instaladas:
 - Microsoft.EntityFrameworkCore.InMemory (8.0.13)
 
 ## Cambios recientes
-Implementación completa de la Fase 5 (Compras a proveedores con actualización automática de stock, costeo "último costo", historial de compras y 34 pruebas unitarias al 100%).
+Implementación completa de la Fase 7 (Control financiero con registro de gastos operativos e ingresos adicionales, consolidación de compras a proveedores, cálculo de balance neto y 42 pruebas unitarias al 100%).
 
 ## Notas importantes
 - Moneda por defecto: Peso Dominicano (RD$ / DOP) con formato regional `es-DO`.
-- Las compras incrementan el inventario y actualizan el precio de costo del producto ("último costo"), sin modificar el precio de venta al público.
+- Solo los roles autorizados (Admin, Super Admin o con permiso explícito `Finanzas.ReportesVer`) pueden visualizar la información financiera sensible.
