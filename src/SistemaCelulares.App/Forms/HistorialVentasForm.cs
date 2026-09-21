@@ -10,7 +10,7 @@ namespace SistemaCelulares.App.Forms;
 public class HistorialVentasForm : Form
 {
     private readonly IVentaService _ventaService;
-    private readonly SesionUsuarioDto _sesion;
+    private readonly SesionUsuario _sesion;
 
     private DateTimePicker _dtpDesde = null!;
     private DateTimePicker _dtpHasta = null!;
@@ -18,7 +18,7 @@ public class HistorialVentasForm : Form
     private DataGridView _gridVentas = null!;
     private List<Venta> _ventasCargadas = new();
 
-    public HistorialVentasForm(IVentaService ventaService, SesionUsuarioDto sesion)
+    public HistorialVentasForm(IVentaService ventaService, SesionUsuario sesion)
     {
         _ventaService = ventaService;
         _sesion = sesion;

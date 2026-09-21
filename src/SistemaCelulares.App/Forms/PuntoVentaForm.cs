@@ -13,7 +13,7 @@ public class PuntoVentaForm : Form
     private readonly IProductoService _productoService;
     private readonly IPagoService _pagoService;
     private readonly ITurnoService _turnoService;
-    private readonly SesionUsuarioDto _sesion;
+    private readonly SesionUsuario _sesion;
     private readonly IServiceProvider _serviceProvider;
 
     private Turno? _turnoActivo;
@@ -40,7 +40,7 @@ public class PuntoVentaForm : Form
         IProductoService productoService,
         IPagoService pagoService,
         ITurnoService turnoService,
-        SesionUsuarioDto sesion,
+        SesionUsuario sesion,
         IServiceProvider serviceProvider)
     {
         _ventaService = ventaService;
@@ -371,7 +371,7 @@ public class PuntoVentaForm : Form
 
     private async void CargarTurnoActivo()
     {
-        _turnoActivo = await _turnoService.ObtenerTurnoActivoAsync(_sesion.UsuarioId);
+        _turnoActivo = await _turnoService.ObtenerTurnoAbiertoAsync(_sesion.UsuarioId);
         if (_turnoActivo == null)
         {
             _lblTurnoInfo.Text = "⚠ CAJA CERRADA (Abra un turno antes de vender)";
@@ -393,7 +393,7 @@ public class PuntoVentaForm : Form
         var prod = await _productoService.BuscarPorCodigoBarrasOSkuAsync(criterio);
         if (prod == null)
         {
-            var lista = await _productoService.ObtenerTodosAsync(criterio);
+            var lista = await _productoService.ObtenerProductosAsync(soloActivos: true, busqueda: criterio);
             prod = lista.FirstOrDefault();
         }
 
