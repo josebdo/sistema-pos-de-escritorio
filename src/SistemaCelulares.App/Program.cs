@@ -60,11 +60,14 @@ internal static class Program
         services.AddScoped<IUsuarioService, UsuarioService>();
         services.AddScoped<IRolService, RolService>();
         services.AddScoped<ITurnoService, TurnoService>();
+        services.AddScoped<ICategoriaService, CategoriaService>();
+        services.AddScoped<IProductoService, ProductoService>();
 
         // Formularios
         services.AddTransient<LoginForm>();
         services.AddTransient<UsuariosForm>();
         services.AddTransient<RolesPermisosForm>();
         services.AddTransient<HistorialTurnosForm>();
+        services.AddTransient<ProductosForm>();
     }
 }

@@ -10,6 +10,8 @@ public class AppDbContext : DbContext
     public DbSet<Permiso> Permisos => Set<Permiso>();
     public DbSet<RolPermiso> RolPermisos => Set<RolPermiso>();
     public DbSet<Turno> Turnos => Set<Turno>();
+    public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<Producto> Productos => Set<Producto>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -99,6 +101,37 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(t => new { t.UsuarioAperturaId, t.Estado });
+        });
+
+        // Configuración de Categoria
+        modelBuilder.Entity<Categoria>(entity =>
+        {
+            entity.ToTable("Categorias");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Nombre).IsRequired().HasMaxLength(80);
+            entity.HasIndex(c => c.Nombre).IsUnique();
+            entity.Property(c => c.PrefijoSku).IsRequired().HasMaxLength(10);
+            entity.Property(c => c.Descripcion).HasMaxLength(255);
+        });
+
+        // Configuración de Producto
+        modelBuilder.Entity<Producto>(entity =>
+        {
+            entity.ToTable("Productos");
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Nombre).IsRequired().HasMaxLength(150);
+            entity.Property(p => p.Sku).IsRequired().HasMaxLength(50);
+            entity.HasIndex(p => p.Sku).IsUnique();
+            entity.Property(p => p.CodigoBarras).HasMaxLength(50);
+            entity.HasIndex(p => p.CodigoBarras);
+            entity.Property(p => p.PrecioCosto).HasPrecision(18, 2);
+            entity.Property(p => p.PrecioVenta).HasPrecision(18, 2);
+            entity.Property(p => p.Descripcion).HasMaxLength(500);
+
+            entity.HasOne(p => p.Categoria)
+                  .WithMany(c => c.Productos)
+                  .HasForeignKey(p => p.CategoriaId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

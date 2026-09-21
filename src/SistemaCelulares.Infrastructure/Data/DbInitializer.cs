@@ -172,5 +172,63 @@ public static class DbInitializer
         }
 
         await context.SaveChangesAsync();
+
+        // 5. Sembrar Categorías Iniciales para Tienda de Celulares
+        if (!await context.Categorias.AnyAsync())
+        {
+            var catCel = new Categoria { Nombre = "Celulares y Smartphones", PrefijoSku = "CEL", Descripcion = "Teléfonos móviles de todas las marcas y gamas", Activo = true };
+            var catAcc = new Categoria { Nombre = "Accesorios Generales", PrefijoSku = "ACC", Descripcion = "Audífonos, soportes, adaptadores", Activo = true };
+            var catCar = new Categoria { Nombre = "Cargadores y Cables", PrefijoSku = "CAR", Descripcion = "Cargadores rápidos, cables Tipo C, Lightning", Activo = true };
+            var catPro = new Categoria { Nombre = "Protectores y Fundas", PrefijoSku = "PRO", Descripcion = "Fundas de silicona, carcasas antigolpes, vidrios templados", Activo = true };
+            var catRep = new Categoria { Nombre = "Repuestos y Pantallas", PrefijoSku = "REP", Descripcion = "Pantallas OLED/LCD, baterías de reemplazo", Activo = true };
+
+            context.Categorias.AddRange(catCel, catAcc, catCar, catPro, catRep);
+            await context.SaveChangesAsync();
+
+            // Productos de ejemplo iniciales
+            context.Productos.AddRange(
+                new Producto
+                {
+                    Nombre = "Samsung Galaxy A54 5G 128GB",
+                    CategoriaId = catCel.Id,
+                    Sku = "CEL-0001",
+                    PrecioCosto = 14500.00m,
+                    PrecioVenta = 19500.00m,
+                    StockActual = 8,
+                    CantidadMinima = 2,
+                    CodigoBarras = "7421001234567",
+                    Descripcion = "Pantalla 6.4 FHD+ 120Hz, 8GB RAM, Cámara 50MP",
+                    Activo = true
+                },
+                new Producto
+                {
+                    Nombre = "iPhone 13 128GB Midnight",
+                    CategoriaId = catCel.Id,
+                    Sku = "CEL-0002",
+                    PrecioCosto = 28000.00m,
+                    PrecioVenta = 35000.00m,
+                    StockActual = 5,
+                    CantidadMinima = 2,
+                    CodigoBarras = "194252707203",
+                    Descripcion = "Chip A15 Bionic, pantalla Super Retina XDR",
+                    Activo = true
+                },
+                new Producto
+                {
+                    Nombre = "Cargador Rápido 25W Tipo C",
+                    CategoriaId = catCar.Id,
+                    Sku = "CAR-0001",
+                    PrecioCosto = 450.00m,
+                    PrecioVenta = 950.00m,
+                    StockActual = 20,
+                    CantidadMinima = 5,
+                    CodigoBarras = "8806090558122",
+                    Descripcion = "Power Delivery 3.0 para Samsung y otros",
+                    Activo = true
+                }
+            );
+
+            await context.SaveChangesAsync();
+        }
     }
 }

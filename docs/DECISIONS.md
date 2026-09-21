@@ -23,3 +23,9 @@
 - **Decisión**: Catálogo de permisos cerrado para el sistema RBAC y almacenamiento seguro de contraseñas con BCrypt.
 - **Motivo**: Seguridad robusta, evitando contraseñas en texto plano y asegurando que los roles personalizados solo puedan recibir permisos válidos del sistema.
 - **Fecha**: 2026-09-20
+
+## DEC-005
+- **Estado**: VIGENTE
+- **Decisión**: Generación automática de SKU basada en prefijo de categoría (ej. `CEL-0001`, `ACC-0001`) con soporte para personalización manual e índice único en base de datos.
+- **Motivo**: Agiliza la creación de productos evitando errores humanos de codificación, a la vez que garantiza la unicidad e integridad del inventario.
+- **Fecha**: 2026-09-20

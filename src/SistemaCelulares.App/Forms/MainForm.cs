@@ -140,7 +140,14 @@ public class MainForm : Form
 
         if (_sesion.TienePermiso(Permisos.ProductosVer))
         {
-            CrearBotonMenu(panelMenu, "📦 Productos e Inventario", () => MostrarAvisoFase("Productos e Inventario (Fase 3)", "Gestión de productos, categorías, SKU y alertas de stock mínimo."));
+            CrearBotonMenu(panelMenu, "📦 Productos e Inventario", () =>
+            {
+                var f = new ProductosForm(
+                    _serviceProvider.GetRequiredService<IProductoService>(),
+                    _serviceProvider.GetRequiredService<ICategoriaService>(),
+                    _sesion);
+                AbrirFormularioHijo(f, "Catálogo de Productos e Inventario");
+            });
         }
 
         if (_sesion.TienePermiso(Permisos.ProveedoresGestionar))
