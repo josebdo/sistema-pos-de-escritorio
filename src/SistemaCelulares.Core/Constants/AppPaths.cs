@@ -4,7 +4,7 @@ public static class AppPaths
 {
     private static readonly string _appDataFolder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-        "SistemaCelulares"
+        "VeyraPOS"
     );
 
     static AppPaths()
@@ -14,6 +14,21 @@ public static class AppPaths
             if (!Directory.Exists(_appDataFolder))
             {
                 Directory.CreateDirectory(_appDataFolder);
+            }
+
+            // Migración transparente si existía la carpeta anterior
+            var legacyFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "SistemaCelulares"
+            );
+            if (Directory.Exists(legacyFolder))
+            {
+                var legacyDb = Path.Combine(legacyFolder, "sistema_celulares.db");
+                var currentDb = Path.Combine(_appDataFolder, "veyra_pos.db");
+                if (File.Exists(legacyDb) && !File.Exists(currentDb))
+                {
+                    try { File.Copy(legacyDb, currentDb, overwrite: false); } catch { }
+                }
             }
 
             var backupsDir = Path.Combine(_appDataFolder, "Backups");
@@ -27,7 +42,7 @@ public static class AppPaths
             // Si hay restricción de permisos inusual, fallback a LocalApplicationData
             _appDataFolder = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "SistemaCelulares"
+                "VeyraPOS"
             );
             if (!Directory.Exists(_appDataFolder))
             {
@@ -37,14 +52,14 @@ public static class AppPaths
     }
 
     /// <summary>
-    /// Carpeta raíz segura de datos mutables (por defecto C:\ProgramData\SistemaCelulares)
+    /// Carpeta raíz segura de datos mutables (por defecto C:\ProgramData\VeyraPOS)
     /// </summary>
     public static string CarpetaDatos => _appDataFolder;
 
     /// <summary>
     /// Ruta del archivo de base de datos SQLite activo
     /// </summary>
-    public static string RutaBaseDatos => Path.Combine(_appDataFolder, "sistema_celulares.db");
+    public static string RutaBaseDatos => Path.Combine(_appDataFolder, "veyra_pos.db");
 
     /// <summary>
     /// Ruta del archivo de configuración de red y multicaja

@@ -27,7 +27,7 @@ public class LoginForm : Form
     private void InitializeCustomComponents()
     {
         Text = "Veyra POS - Inicio de Sesión";
-        Size = new Size(460, 580);
+        Size = new Size(460, 520);
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -39,8 +39,8 @@ public class LoginForm : Form
         // Tarjeta Central
         var card = new Panel
         {
-            Size = new Size(390, 490),
-            Location = new Point(30, 25),
+            Size = new Size(390, 435),
+            Location = new Point(30, 20),
             BackColor = Color.White,
             Padding = new Padding(24)
         };
@@ -172,17 +172,17 @@ public class LoginForm : Form
         _btnLogin.Click += async (s, e) => await ProcesarLoginAsync();
         card.Controls.Add(_btnLogin);
 
-        // Acceso rápido / Tips de roles iniciales para prueba
-        var lblQuick = new Label
+        // Pie de ventana seguro
+        var lblFooter = new Label
         {
-            Text = "Usuarios de prueba:\n• superadmin (SuperAdmin123!)\n• admin (Admin123!)\n• cajero (Cajero123!)",
+            Text = "🔒 Acceso Seguro a Veyra POS",
             Font = new Font("Segoe UI", 8F),
             ForeColor = UITheme.TextMuted,
-            Location = new Point(24, 380),
-            Size = new Size(342, 60),
+            Location = new Point(24, 385),
+            Size = new Size(342, 25),
             TextAlign = ContentAlignment.MiddleCenter
         };
-        card.Controls.Add(lblQuick);
+        card.Controls.Add(lblFooter);
 
         AcceptButton = _btnLogin;
     }

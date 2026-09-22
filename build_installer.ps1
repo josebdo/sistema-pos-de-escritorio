@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-    Script automatizado para compilar y generar el instalador de Sistema de Celulares.
+    Script automatizado para compilar y generar el instalador de Veyra POS.
 .DESCRIPTION
     1. Publica la aplicación .NET 8 en modo autocontenido (win-x64).
     2. Localiza Inno Setup Compiler (ISCC.exe) y genera el archivo Setup .exe.
 #>
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "   SISTEMA DE CELULARES - COMPILADOR DE INSTALADOR        " -ForegroundColor Cyan
+Write-Host "            VEYRA POS - GENERADOR DE INSTALADOR           " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
 

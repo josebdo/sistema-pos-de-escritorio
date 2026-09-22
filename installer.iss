@@ -1,7 +1,7 @@
-; Script de Inno Setup para Sistema de Celulares
+; Script de Inno Setup para Veyra POS
 ; Configurado para .NET 8 Windows Forms con base de datos segura en ProgramData
 
-#define MyAppName "Sistema de Celulares"
+#define MyAppName "Veyra POS"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Jose BDO"
 #define MyAppExeName "SistemaCelulares.App.exe"
@@ -11,11 +11,11 @@ AppId={{E83B4A9C-821A-4C4A-9A4B-3D28E7C41099}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\SistemaCelulares
+DefaultDirName={autopf}\Veyra POS
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\installer-output
-OutputBaseFilename=SistemaCelulares_Setup_v1.0.0
+OutputBaseFilename=VeyraPOS_Setup_v1.0.0
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -44,5 +44,5 @@ Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Filenam
 
 [Dirs]
 ; Crear la carpeta de datos común en ProgramData con permisos de lectura/escritura completos
-Name: "{commonappdata}\SistemaCelulares"; Permissions: users-full
-Name: "{commonappdata}\SistemaCelulares\Backups"; Permissions: users-full
+Name: "{commonappdata}\VeyraPOS"; Permissions: users-full
+Name: "{commonappdata}\VeyraPOS\Backups"; Permissions: users-full
