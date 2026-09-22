@@ -12,6 +12,7 @@ public class HistorialTurnosForm : Form
 {
     private readonly ITurnoService _turnoService;
     private readonly IUsuarioService _usuarioService;
+    private readonly IVentaService _ventaService;
     private readonly SesionUsuario _sesionActual;
 
     private Panel _cardTurnoActual = null!;
@@ -22,6 +23,7 @@ public class HistorialTurnosForm : Form
     private DateTimePicker _dtpDesde = null!;
     private DateTimePicker _dtpHasta = null!;
     private ComboBox _cbUsuarios = null!;
+    private Button _btnVerDetalle = null!;
     private DataGridView _gridTurnos = null!;
     private List<Turno> _listaTurnos = new();
     private Turno? _turnoAbiertoActual;
@@ -29,10 +31,12 @@ public class HistorialTurnosForm : Form
     public HistorialTurnosForm(
         ITurnoService turnoService,
         IUsuarioService usuarioService,
+        IVentaService ventaService,
         SesionUsuario sesionActual)
     {
         _turnoService = turnoService;
         _usuarioService = usuarioService;
+        _ventaService = ventaService;
         _sesionActual = sesionActual;
 
         InitializeCustomComponents();
@@ -45,8 +49,8 @@ public class HistorialTurnosForm : Form
 
     private void InitializeCustomComponents()
     {
-        Text = "Gestión y Arqueo de Turnos de Caja";
-        Size = new Size(1000, 650);
+        Text = "Gestión de Caja, Arqueos e Historial de Turnos — Veyra POS";
+        Size = new Size(1100, 700);
         BackColor = UITheme.AppBg;
         Font = UITheme.BodyFont;
 
@@ -61,7 +65,7 @@ public class HistorialTurnosForm : Form
         var header = new Panel { Dock = DockStyle.Top, Height = 60 };
         var lblTitulo = new Label
         {
-            Text = "Caja y Turnos de Trabajo",
+            Text = "Control de Caja, Turnos y Arqueos",
             Font = UITheme.TitleFont,
             ForeColor = UITheme.DarkBg,
             Location = new Point(0, 5),
@@ -71,7 +75,7 @@ public class HistorialTurnosForm : Form
 
         var lblSub = new Label
         {
-            Text = "Apertura, control de flujo de efectivo en tiempo real y arqueo de cierre de turnos",
+            Text = "Apertura y cierre de caja, auditoría de quién abrió/cerró, ventas realizadas y control de déficit o sobrante",
             Font = UITheme.SmallFont,
             ForeColor = UITheme.TextMuted,
             Location = new Point(0, 35),
@@ -90,32 +94,38 @@ public class HistorialTurnosForm : Form
             Margin = new Padding(0, 0, 0, 15)
         };
 
+        var panelTurnoTexto = new Panel
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(0, 0, 10, 0)
+        };
+
         _lblEstadoTurno = new Label
         {
             Text = "Estado de su turno actual:",
             Font = UITheme.SectionFont,
             ForeColor = UITheme.DarkBg,
-            Location = new Point(15, 15),
+            Location = new Point(0, 5),
             AutoSize = true
         };
-        _cardTurnoActual.Controls.Add(_lblEstadoTurno);
+        panelTurnoTexto.Controls.Add(_lblEstadoTurno);
 
         _lblDetalleTurno = new Label
         {
-            Text = "Verificando...",
+            Text = "Verificando estado de caja...",
             Font = UITheme.BodyFont,
             ForeColor = UITheme.TextMuted,
-            Location = new Point(15, 42),
-            Size = new Size(650, 25)
+            Location = new Point(0, 32),
+            AutoSize = true
         };
-        _cardTurnoActual.Controls.Add(_lblDetalleTurno);
+        panelTurnoTexto.Controls.Add(_lblDetalleTurno);
+        _cardTurnoActual.Controls.Add(panelTurnoTexto);
 
         _btnAccionTurno = new Button
         {
-            Text = "Abrir Turno",
-            Size = new Size(140, 42),
-            Location = new Point(780, 20),
-            Anchor = AnchorStyles.Top | AnchorStyles.Right
+            Text = "🔓 Abrir Turno",
+            Size = new Size(160, 44),
+            Dock = DockStyle.Right
         };
         UITheme.AplicarBotonPrimario(_btnAccionTurno);
         _btnAccionTurno.Click += async (s, e) => await EjecutarAccionTurnoAsync();
@@ -123,36 +133,47 @@ public class HistorialTurnosForm : Form
 
         panelPrincipal.Controls.Add(_cardTurnoActual);
 
-        // Barra de Filtros
-        var toolbar = new Panel { Dock = DockStyle.Top, Height = 55 };
+        // Barra de Filtros y Acciones
+        var flowFiltros = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Padding = new Padding(0, 8, 0, 8)
+        };
 
-        var lblDesde = new Label { Text = "Desde:", Location = new Point(0, 15), AutoSize = true, Font = UITheme.BodyFont };
-        toolbar.Controls.Add(lblDesde);
+        var lblDesde = new Label { Text = "Desde:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(0, 6, 6, 4) };
+        flowFiltros.Controls.Add(lblDesde);
 
-        _dtpDesde = new DateTimePicker { Location = new Point(50, 12), Size = new Size(130, 28), Format = DateTimePickerFormat.Short, Value = DateTime.Today.AddDays(-7) };
+        _dtpDesde = new DateTimePicker { Size = new Size(125, 28), Format = DateTimePickerFormat.Short, Value = DateTime.Today.AddDays(-14), Margin = new Padding(0, 2, 12, 4) };
         _dtpDesde.ValueChanged += async (s, e) => await RecargarHistorialAsync();
-        toolbar.Controls.Add(_dtpDesde);
+        flowFiltros.Controls.Add(_dtpDesde);
 
-        var lblHasta = new Label { Text = "Hasta:", Location = new Point(190, 15), AutoSize = true, Font = UITheme.BodyFont };
-        toolbar.Controls.Add(lblHasta);
+        var lblHasta = new Label { Text = "Hasta:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(0, 6, 6, 4) };
+        flowFiltros.Controls.Add(lblHasta);
 
-        _dtpHasta = new DateTimePicker { Location = new Point(240, 12), Size = new Size(130, 28), Format = DateTimePickerFormat.Short, Value = DateTime.Today };
+        _dtpHasta = new DateTimePicker { Size = new Size(125, 28), Format = DateTimePickerFormat.Short, Value = DateTime.Today, Margin = new Padding(0, 2, 12, 4) };
         _dtpHasta.ValueChanged += async (s, e) => await RecargarHistorialAsync();
-        toolbar.Controls.Add(_dtpHasta);
+        flowFiltros.Controls.Add(_dtpHasta);
 
-        var lblUser = new Label { Text = "Cajero:", Location = new Point(385, 15), AutoSize = true, Font = UITheme.BodyFont };
-        toolbar.Controls.Add(lblUser);
+        var lblUser = new Label { Text = "Cajero:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(0, 6, 6, 4) };
+        flowFiltros.Controls.Add(lblUser);
 
-        _cbUsuarios = new ComboBox { Location = new Point(440, 12), Size = new Size(180, 28), DropDownStyle = ComboBoxStyle.DropDownList };
+        _cbUsuarios = new ComboBox { Size = new Size(170, 28), DropDownStyle = ComboBoxStyle.DropDownList, Margin = new Padding(0, 2, 12, 4) };
         _cbUsuarios.SelectedIndexChanged += async (s, e) => await RecargarHistorialAsync();
-        toolbar.Controls.Add(_cbUsuarios);
+        flowFiltros.Controls.Add(_cbUsuarios);
 
-        var btnRefrescar = new Button { Text = "🔄 Recargar", Location = new Point(635, 10), Size = new Size(100, 34) };
+        var btnRefrescar = new Button { Text = "🔄 Recargar", Size = new Size(105, 32), Margin = new Padding(0, 0, 8, 4) };
         UITheme.AplicarBotonSecundario(btnRefrescar);
         btnRefrescar.Click += async (s, e) => await RecargarTodoAsync();
-        toolbar.Controls.Add(btnRefrescar);
+        flowFiltros.Controls.Add(btnRefrescar);
 
-        panelPrincipal.Controls.Add(toolbar);
+        _btnVerDetalle = new Button { Text = "🔍 Ver Ventas del Turno", Size = new Size(185, 32), Margin = new Padding(0, 0, 8, 4) };
+        UITheme.AplicarBotonPrimario(_btnVerDetalle);
+        _btnVerDetalle.Click += (s, e) => AbrirDetalleVentasTurnoSeleccionado();
+        flowFiltros.Controls.Add(_btnVerDetalle);
 
         // DataGridView de Historial
         var panelGrid = new Panel
@@ -162,26 +183,43 @@ public class HistorialTurnosForm : Form
             Padding = new Padding(1)
         };
 
-        _gridTurnos = new DataGridView { Dock = DockStyle.Fill };
+        _gridTurnos = new DataGridView
+        {
+            Dock = DockStyle.Fill,
+            AllowUserToAddRows = false,
+            AllowUserToDeleteRows = false,
+            ReadOnly = true,
+            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            MultiSelect = false,
+            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            RowTemplate = { Height = 34 }
+        };
         UITheme.EstilizarDataGridView(_gridTurnos);
         ConfigurarColumnasGrid();
+        _gridTurnos.DoubleClick += (s, e) => AbrirDetalleVentasTurnoSeleccionado();
         panelGrid.Controls.Add(_gridTurnos);
 
-        panelPrincipal.Controls.Add(panelGrid);
+        // Jerarquía de Acoplamiento ordenada
+        panelPrincipal.Controls.Add(panelGrid);         // Fill
+        panelPrincipal.Controls.Add(flowFiltros);        // Top 3
+        panelPrincipal.Controls.Add(_cardTurnoActual);   // Top 2
+        panelPrincipal.Controls.Add(header);             // Top 1
     }
 
     private void ConfigurarColumnasGrid()
     {
         _gridTurnos.Columns.Clear();
-        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Id", HeaderText = "# Turno", Width = 75 });
+        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Id", HeaderText = "# Turno", FillWeight = 65 });
+        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Estado", HeaderText = "Estado", FillWeight = 85 });
         _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "CajeroApertura", HeaderText = "Apertura Por", FillWeight = 110 });
-        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "FechaApertura", HeaderText = "Fecha Apertura", FillWeight = 120 });
-        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "MontoApertura", HeaderText = "Monto Inicial", FillWeight = 90 });
+        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "FechaApertura", HeaderText = "Fecha Apertura", FillWeight = 115 });
+        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "MontoApertura", HeaderText = "Fondo Inicial", FillWeight = 90 });
+        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "CajeroCierre", HeaderText = "Cierre Por", FillWeight = 110 });
+        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "FechaCierre", HeaderText = "Fecha Cierre", FillWeight = 115 });
         _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "VentasEfectivo", HeaderText = "Ventas Efec.", FillWeight = 90 });
         _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "MontoEsperado", HeaderText = "Esperado", FillWeight = 90 });
         _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "MontoCierre", HeaderText = "Contado", FillWeight = 90 });
-        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Diferencia", HeaderText = "Diferencia", FillWeight = 90 });
-        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Estado", HeaderText = "Estado", FillWeight = 80 });
+        _gridTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Diferencia", HeaderText = "Déficit / Cuadre", FillWeight = 110 });
     }
 
     private async Task CargarUsuariosFiltroAsync()
@@ -204,20 +242,20 @@ public class HistorialTurnosForm : Form
         _turnoAbiertoActual = await _turnoService.ObtenerTurnoAbiertoAsync(_sesionActual.UsuarioId);
         if (_turnoAbiertoActual != null)
         {
-            _lblEstadoTurno.Text = $"🟢 Turno Abierto (#{_turnoAbiertoActual.Id})";
+            _lblEstadoTurno.Text = $"🟢 Caja Abierta por {_sesionActual.NombreCompleto} (Turno #{_turnoAbiertoActual.Id})";
             _lblEstadoTurno.ForeColor = UITheme.Success;
             var esperado = _turnoAbiertoActual.MontoApertura + _turnoAbiertoActual.TotalVentasEfectivo;
-            _lblDetalleTurno.Text = $"Apertura: {_turnoAbiertoActual.FechaApertura.ToLocalTime():dd/MM/yyyy hh:mm tt} | Inicial: {AppCulture.FormatearMoneda(_turnoAbiertoActual.MontoApertura)} | Ventas: {AppCulture.FormatearMoneda(_turnoAbiertoActual.TotalVentasEfectivo)} | Total Esperado: {AppCulture.FormatearMoneda(esperado)}";
-            _btnAccionTurno.Text = "Cerrar Turno";
+            _lblDetalleTurno.Text = $"Apertura: {_turnoAbiertoActual.FechaApertura.ToLocalTime():dd/MM/yyyy hh:mm tt} | Fondo Inicial: {AppCulture.FormatearMoneda(_turnoAbiertoActual.MontoApertura)} | Ventas Efectivo: {AppCulture.FormatearMoneda(_turnoAbiertoActual.TotalVentasEfectivo)} | Total Esperado: {AppCulture.FormatearMoneda(esperado)}";
+            _btnAccionTurno.Text = "🔒 Cerrar Caja / Turno";
             UITheme.AplicarBotonPeligro(_btnAccionTurno);
             _btnAccionTurno.Visible = _sesionActual.TienePermiso(Permisos.TurnosCerrar);
         }
         else
         {
-            _lblEstadoTurno.Text = "🔴 No tiene un turno de caja abierto";
+            _lblEstadoTurno.Text = "🔴 Caja Cerrada — No tiene un turno activo";
             _lblEstadoTurno.ForeColor = UITheme.Danger;
-            _lblDetalleTurno.Text = "Debe abrir un turno con el fondo inicial en caja antes de registrar ventas.";
-            _btnAccionTurno.Text = "Abrir Turno";
+            _lblDetalleTurno.Text = "Para empezar a facturar en el Punto de Venta (POS) debe abrir un turno con su fondo inicial en caja.";
+            _btnAccionTurno.Text = "🔓 Abrir Turno de Caja";
             UITheme.AplicarBotonPrimario(_btnAccionTurno);
             _btnAccionTurno.Visible = _sesionActual.TienePermiso(Permisos.TurnosAbrir);
         }
@@ -242,34 +280,77 @@ public class HistorialTurnosForm : Form
         _gridTurnos.Rows.Clear();
         foreach (var t in _listaTurnos)
         {
-            var diffStr = "-";
-            if (t.Diferencia.HasValue)
+            string diffStr;
+            Color diffColor = UITheme.TextPrimary;
+
+            if (t.Estado == TurnoEstado.Abierto)
             {
-                diffStr = AppCulture.FormatearMoneda(t.Diferencia.Value);
+                diffStr = "🟢 En Curso";
+                diffColor = UITheme.Success;
+            }
+            else if (t.Diferencia.HasValue)
+            {
+                if (t.Diferencia.Value < 0)
+                {
+                    diffStr = $"🔴 Faltante: {AppCulture.FormatearMoneda(t.Diferencia.Value)}";
+                    diffColor = UITheme.Danger;
+                }
+                else if (t.Diferencia.Value > 0)
+                {
+                    diffStr = $"🔵 Sobrante: +{AppCulture.FormatearMoneda(t.Diferencia.Value)}";
+                    diffColor = UITheme.Primary;
+                }
+                else
+                {
+                    diffStr = "🟢 Cuadrada (RD$0.00)";
+                    diffColor = UITheme.Success;
+                }
+            }
+            else
+            {
+                diffStr = "-";
             }
 
             var rowIndex = _gridTurnos.Rows.Add(
                 $"#{t.Id}",
-                t.UsuarioApertura?.NombreCompleto ?? "Desconocido",
+                t.Estado == TurnoEstado.Abierto ? "🟢 ABIERTA" : "⚪ CERRADA",
+                t.UsuarioApertura?.NombreCompleto ?? "Usuario #" + t.UsuarioAperturaId,
                 t.FechaApertura.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt"),
                 AppCulture.FormatearMoneda(t.MontoApertura),
+                t.UsuarioCierre?.NombreCompleto ?? (t.Estado == TurnoEstado.Abierto ? "En Curso" : "-"),
+                t.FechaCierre.HasValue ? t.FechaCierre.Value.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt") : "-",
                 AppCulture.FormatearMoneda(t.TotalVentasEfectivo),
                 t.Estado == TurnoEstado.Cerrado ? AppCulture.FormatearMoneda(t.MontoEsperado) : AppCulture.FormatearMoneda(t.MontoApertura + t.TotalVentasEfectivo),
                 t.MontoCierre.HasValue ? AppCulture.FormatearMoneda(t.MontoCierre.Value) : "-",
-                diffStr,
-                t.Estado == TurnoEstado.Abierto ? "🟢 Abierto" : "⚪ Cerrado"
+                diffStr
             );
 
             var row = _gridTurnos.Rows[rowIndex];
-            if (t.Diferencia.HasValue)
+            row.Cells["Diferencia"].Style.ForeColor = diffColor;
+            row.Cells["Diferencia"].Style.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+
+            if (t.Estado == TurnoEstado.Abierto)
             {
-                if (t.Diferencia.Value < 0)
-                    row.Cells["Diferencia"].Style.ForeColor = UITheme.Danger;
-                else if (t.Diferencia.Value > 0)
-                    row.Cells["Diferencia"].Style.ForeColor = UITheme.Warning;
-                else
-                    row.Cells["Diferencia"].Style.ForeColor = UITheme.Success;
+                row.Cells["Estado"].Style.ForeColor = UITheme.Success;
+                row.Cells["Estado"].Style.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             }
+        }
+    }
+
+    private void AbrirDetalleVentasTurnoSeleccionado()
+    {
+        if (_gridTurnos.SelectedRows.Count == 0)
+        {
+            MessageBox.Show("Por favor seleccione un turno de la lista para ver su detalle de ventas y arqueo.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var rowIndex = _gridTurnos.SelectedRows[0].Index;
+        if (rowIndex >= 0 && rowIndex < _listaTurnos.Count)
+        {
+            var turnoSeleccionado = _listaTurnos[rowIndex];
+            using var modal = new DetalleTurnoVentasModalForm(turnoSeleccionado, _ventaService);
+            modal.ShowDialog(this);
         }
     }
 

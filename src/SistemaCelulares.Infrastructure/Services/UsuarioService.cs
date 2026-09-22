@@ -93,6 +93,7 @@ public class UsuarioService : IUsuarioService
         int rolId,
         string? email = null,
         string? telefono = null,
+        string? nombreUsuario = null,
         CancellationToken cancellationToken = default)
     {
         var usuario = await _context.Usuarios.FindAsync(new object[] { id }, cancellationToken);
@@ -102,11 +103,51 @@ public class UsuarioService : IUsuarioService
         if (!rolExiste)
             throw new InvalidOperationException("El rol seleccionado no es válido.");
 
+        if (!string.IsNullOrWhiteSpace(nombreUsuario))
+        {
+            var normalizado = nombreUsuario.Trim().ToLower();
+            if (usuario.NombreUsuario.ToLower() != normalizado)
+            {
+                var existe = await _context.Usuarios.AnyAsync(u => u.Id != id && u.NombreUsuario.ToLower() == normalizado, cancellationToken);
+                if (existe)
+                    throw new InvalidOperationException($"Ya existe otro usuario con el nombre de usuario '{nombreUsuario}'.");
+
+                usuario.NombreUsuario = nombreUsuario.Trim();
+            }
+        }
+
         usuario.NombreCompleto = nombreCompleto.Trim();
         usuario.RolId = rolId;
         usuario.Email = email?.Trim();
         usuario.Telefono = telefono?.Trim();
 
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> ActualizarMiPerfilAsync(int id, string nombreCompleto, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(nombreCompleto))
+            throw new ArgumentException("El nombre completo es obligatorio.");
+
+        var usuario = await _context.Usuarios.FindAsync(new object[] { id }, cancellationToken);
+        if (usuario == null) return false;
+
+        usuario.NombreCompleto = nombreCompleto.Trim();
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> ResetearPasswordAsync(int id, string nuevaPassword, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(nuevaPassword) || nuevaPassword.Length < 6)
+            throw new ArgumentException("La nueva contraseña debe tener al menos 6 caracteres.");
+
+        var usuario = await _context.Usuarios.FindAsync(new object[] { id }, cancellationToken);
+        if (usuario == null) return false;
+
+        usuario.PasswordHash = _hasher.HashPassword(nuevaPassword.Trim());
+        usuario.DebeCambiarPassword = false;
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }

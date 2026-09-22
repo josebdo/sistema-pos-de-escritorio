@@ -136,6 +136,7 @@ public class ProductoService : IProductoService
         string? sku = null,
         string? codigoBarras = null,
         string? descripcion = null,
+        bool requiereSerie = false,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(nombre))
@@ -190,6 +191,7 @@ public class ProductoService : IProductoService
             StockActual = stockInicial,
             CantidadMinima = cantidadMinima,
             CodigoBarras = codigoBarrasFinal,
+            RequiereSerie = requiereSerie,
             Activo = true,
             FechaCreacion = DateTime.UtcNow
         };
@@ -288,5 +290,82 @@ public class ProductoService : IProductoService
             .Where(p => p.Activo && p.StockActual <= p.CantidadMinima)
             .OrderBy(p => p.StockActual)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<UnidadProducto>> ObtenerUnidadesPorProductoAsync(
+        int productoId,
+        EstadoUnidadProducto? estado = null,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<UnidadProducto> query = _context.UnidadesProducto
+            .Include(u => u.Venta)
+            .Where(u => u.ProductoId == productoId);
+
+        if (estado.HasValue)
+        {
+            query = query.Where(u => u.Estado == estado.Value);
+        }
+
+        return await query.OrderByDescending(u => u.FechaIngreso).ToListAsync(cancellationToken);
+    }
+
+    public async Task<UnidadProducto?> ObtenerUnidadPorImeiAsync(string imei, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(imei)) return null;
+
+        var q = imei.Trim().ToLower();
+        return await _context.UnidadesProducto
+            .Include(u => u.Producto)
+                .ThenInclude(p => p.Categoria)
+            .Include(u => u.Venta)
+            .FirstOrDefaultAsync(u => u.Imei.ToLower() == q, cancellationToken);
+    }
+
+    public async Task<UnidadProducto> RegistrarUnidadImeiAsync(
+        int productoId,
+        string imei,
+        string? notas = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(imei))
+            throw new ArgumentException("El IMEI o número de serie es obligatorio.", nameof(imei));
+
+        var imeiLimpio = imei.Trim();
+        var producto = await _context.Productos.FindAsync(new object[] { productoId }, cancellationToken)
+            ?? throw new InvalidOperationException($"El producto con ID {productoId} no existe.");
+
+        var imeiExiste = await _context.UnidadesProducto.AnyAsync(u => u.Imei.ToLower() == imeiLimpio.ToLower(), cancellationToken);
+        if (imeiExiste)
+            throw new InvalidOperationException($"El IMEI '{imeiLimpio}' ya se encuentra registrado en el sistema.");
+
+        var unidad = new UnidadProducto
+        {
+            ProductoId = productoId,
+            Imei = imeiLimpio,
+            Estado = EstadoUnidadProducto.EnStock,
+            FechaIngreso = DateTime.UtcNow,
+            Notas = notas?.Trim()
+        };
+
+        _context.UnidadesProducto.Add(unidad);
+
+        // Si el producto requiere serie, recalcular su stock según unidades en stock
+        if (producto.RequiereSerie)
+        {
+            producto.StockActual = await _context.UnidadesProducto
+                .CountAsync(u => u.ProductoId == productoId && u.Estado == EstadoUnidadProducto.EnStock, cancellationToken) + 1;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return unidad;
+    }
+
+    public async Task<bool> ValidarImeiDisponibleAsync(string imei, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(imei)) return false;
+
+        var q = imei.Trim().ToLower();
+        return await _context.UnidadesProducto
+            .AnyAsync(u => u.Imei.ToLower() == q && u.Estado == EstadoUnidadProducto.EnStock, cancellationToken);
     }
 }

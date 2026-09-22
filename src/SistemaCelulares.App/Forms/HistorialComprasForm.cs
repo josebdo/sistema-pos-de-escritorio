@@ -77,46 +77,44 @@ public class HistorialComprasForm : Form
         header.Controls.Add(_lblTotalPeriodo);
         panelPrincipal.Controls.Add(header);
 
-        // Toolbar
-        var toolbar = new Panel { Dock = DockStyle.Top, Height = 55 };
-
-        var lblDesde = new Label { Text = "Desde:", Location = new Point(0, 16), AutoSize = true, Font = UITheme.BodyFont };
-        toolbar.Controls.Add(lblDesde);
-
-        _dtpDesde = new DateTimePicker { Location = new Point(50, 13), Size = new Size(130, 28), Format = DateTimePickerFormat.Short, Value = DateTime.Today.AddMonths(-1) };
-        _dtpDesde.ValueChanged += async (s, e) => await RecargarComprasAsync();
-        toolbar.Controls.Add(_dtpDesde);
-
-        var lblHasta = new Label { Text = "Hasta:", Location = new Point(190, 16), AutoSize = true, Font = UITheme.BodyFont };
-        toolbar.Controls.Add(lblHasta);
-
-        _dtpHasta = new DateTimePicker { Location = new Point(240, 13), Size = new Size(130, 28), Format = DateTimePickerFormat.Short, Value = DateTime.Today };
-        _dtpHasta.ValueChanged += async (s, e) => await RecargarComprasAsync();
-        toolbar.Controls.Add(_dtpHasta);
-
-        var lblProv = new Label { Text = "Proveedor:", Location = new Point(380, 16), AutoSize = true, Font = UITheme.BodyFont };
-        toolbar.Controls.Add(lblProv);
-
-        _cbProveedores = new ComboBox { Location = new Point(450, 13), Size = new Size(200, 28), DropDownStyle = ComboBoxStyle.DropDownList };
-        _cbProveedores.SelectedIndexChanged += async (s, e) => await RecargarComprasAsync();
-        toolbar.Controls.Add(_cbProveedores);
-
-        var panelBotones = new FlowLayoutPanel
+        // Toolbar Contenedor
+        var flowToolbar = new FlowLayoutPanel
         {
-            Dock = DockStyle.Right,
-            FlowDirection = FlowDirection.RightToLeft,
-            Width = 260,
-            Height = 50
+            Dock = DockStyle.Top,
+            Height = 45,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Padding = new Padding(0, 4, 0, 6)
         };
 
-        _btnNuevaCompra = new Button { Text = "➕ Registrar Compra", Size = new Size(180, 38) };
+        var lblDesde = new Label { Text = "Desde:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(0, 5, 4, 0) };
+        flowToolbar.Controls.Add(lblDesde);
+
+        _dtpDesde = new DateTimePicker { Size = new Size(110, 26), Format = DateTimePickerFormat.Short, Value = DateTime.Today.AddMonths(-1), Margin = new Padding(0, 2, 8, 0) };
+        _dtpDesde.ValueChanged += async (s, e) => await RecargarComprasAsync();
+        flowToolbar.Controls.Add(_dtpDesde);
+
+        var lblHasta = new Label { Text = "Hasta:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(0, 5, 4, 0) };
+        flowToolbar.Controls.Add(lblHasta);
+
+        _dtpHasta = new DateTimePicker { Size = new Size(110, 26), Format = DateTimePickerFormat.Short, Value = DateTime.Today, Margin = new Padding(0, 2, 8, 0) };
+        _dtpHasta.ValueChanged += async (s, e) => await RecargarComprasAsync();
+        flowToolbar.Controls.Add(_dtpHasta);
+
+        var lblProv = new Label { Text = "Proveedor:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(0, 5, 4, 0) };
+        flowToolbar.Controls.Add(lblProv);
+
+        _cbProveedores = new ComboBox { Size = new Size(160, 26), DropDownStyle = ComboBoxStyle.DropDownList, Margin = new Padding(0, 2, 12, 0) };
+        _cbProveedores.SelectedIndexChanged += async (s, e) => await RecargarComprasAsync();
+        flowToolbar.Controls.Add(_cbProveedores);
+
+        _btnNuevaCompra = new Button { Text = "➕ Registrar Compra", Size = new Size(150, 32), Margin = new Padding(0, 0, 0, 0) };
         UITheme.AplicarBotonPrimario(_btnNuevaCompra);
         _btnNuevaCompra.Click += async (s, e) => await AbrirRegistrarCompraAsync();
         _btnNuevaCompra.Visible = _sesionActual.TienePermiso(Permisos.ComprasRegistrar);
-        panelBotones.Controls.Add(_btnNuevaCompra);
+        flowToolbar.Controls.Add(_btnNuevaCompra);
 
-        toolbar.Controls.Add(panelBotones);
-        panelPrincipal.Controls.Add(toolbar);
+        panelPrincipal.Controls.Add(flowToolbar);
 
         // Split Container (Compras arriba, Detalles abajo)
         var split = new SplitContainer

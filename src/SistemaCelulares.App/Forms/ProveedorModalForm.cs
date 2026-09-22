@@ -32,7 +32,7 @@ public class ProveedorModalForm : Form
     {
         Text = _proveedorIdParaEditar.HasValue ? "Editar Proveedor" : "Registrar Nuevo Proveedor";
         Size = new Size(520, 560);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -66,33 +66,33 @@ public class ProveedorModalForm : Form
         card.Controls.Add(_txtNombre);
 
         // RNC y Teléfono
-        var lblRnc = new Label { Text = "RNC Dominicano (opcional)", Font = UITheme.SectionFont, Location = new Point(20, 110), AutoSize = true };
+        var lblRnc = new Label { Text = "RNC Dominicano *", Font = UITheme.SectionFont, Location = new Point(20, 110), AutoSize = true };
         card.Controls.Add(lblRnc);
 
         _txtRnc = new TextBox { Location = new Point(20, 132), Size = new Size(200, 28) };
         card.Controls.Add(_txtRnc);
 
-        var lblTel = new Label { Text = "Teléfono de Contacto", Font = UITheme.SectionFont, Location = new Point(230, 110), AutoSize = true };
+        var lblTel = new Label { Text = "Teléfono de Contacto *", Font = UITheme.SectionFont, Location = new Point(230, 110), AutoSize = true };
         card.Controls.Add(lblTel);
 
         _txtTelefono = new TextBox { Location = new Point(230, 132), Size = new Size(210, 28) };
         card.Controls.Add(_txtTelefono);
 
         // Email y Persona de Contacto
-        var lblEmail = new Label { Text = "Correo Electrónico (opcional)", Font = UITheme.BodyFont, Location = new Point(20, 170), AutoSize = true };
+        var lblEmail = new Label { Text = "Correo Electrónico *", Font = UITheme.SectionFont, Location = new Point(20, 170), AutoSize = true };
         card.Controls.Add(lblEmail);
 
         _txtEmail = new TextBox { Location = new Point(20, 192), Size = new Size(200, 28) };
         card.Controls.Add(_txtEmail);
 
-        var lblCon = new Label { Text = "Persona de Contacto / Vendedor", Font = UITheme.BodyFont, Location = new Point(230, 170), AutoSize = true };
+        var lblCon = new Label { Text = "Persona de Contacto / Vendedor *", Font = UITheme.SectionFont, Location = new Point(230, 170), AutoSize = true };
         card.Controls.Add(lblCon);
 
         _txtContacto = new TextBox { Location = new Point(230, 192), Size = new Size(210, 28) };
         card.Controls.Add(_txtContacto);
 
         // Dirección
-        var lblDir = new Label { Text = "Dirección Física (opcional)", Font = UITheme.BodyFont, Location = new Point(20, 230), AutoSize = true };
+        var lblDir = new Label { Text = "Dirección Física *", Font = UITheme.SectionFont, Location = new Point(20, 230), AutoSize = true };
         card.Controls.Add(lblDir);
 
         _txtDireccion = new TextBox { Location = new Point(20, 252), Size = new Size(420, 50), Multiline = true };
@@ -151,7 +151,43 @@ public class ProveedorModalForm : Form
 
         if (string.IsNullOrWhiteSpace(nombre))
         {
-            _lblError.Text = "El nombre o razón social es obligatorio.";
+            MessageBox.Show("El nombre o razón social del proveedor es obligatorio.", "Campo Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            _txtNombre.Focus();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(rnc))
+        {
+            MessageBox.Show("El RNC del proveedor es obligatorio.", "Campo Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            _txtRnc.Focus();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(tel))
+        {
+            MessageBox.Show("El teléfono del proveedor es obligatorio.", "Campo Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            _txtTelefono.Focus();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            MessageBox.Show("El correo electrónico del proveedor es obligatorio.", "Campo Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            _txtEmail.Focus();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(contacto))
+        {
+            MessageBox.Show("La persona de contacto o vendedor es obligatoria.", "Campo Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            _txtContacto.Focus();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(dir))
+        {
+            MessageBox.Show("La dirección física del proveedor es obligatoria.", "Campo Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            _txtDireccion.Focus();
             return;
         }
 
@@ -163,11 +199,11 @@ public class ProveedorModalForm : Form
                 var ok = await _proveedorService.ActualizarProveedorAsync(
                     _proveedorIdParaEditar.Value,
                     nombre,
-                    string.IsNullOrEmpty(rnc) ? null : rnc,
-                    string.IsNullOrEmpty(tel) ? null : tel,
-                    string.IsNullOrEmpty(email) ? null : email,
-                    string.IsNullOrEmpty(dir) ? null : dir,
-                    string.IsNullOrEmpty(contacto) ? null : contacto
+                    rnc,
+                    tel,
+                    email,
+                    dir,
+                    contacto
                 );
 
                 if (ok)
@@ -180,11 +216,11 @@ public class ProveedorModalForm : Form
             {
                 await _proveedorService.CrearProveedorAsync(
                     nombre,
-                    string.IsNullOrEmpty(rnc) ? null : rnc,
-                    string.IsNullOrEmpty(tel) ? null : tel,
-                    string.IsNullOrEmpty(email) ? null : email,
-                    string.IsNullOrEmpty(dir) ? null : dir,
-                    string.IsNullOrEmpty(contacto) ? null : contacto
+                    rnc,
+                    tel,
+                    email,
+                    dir,
+                    contacto
                 );
 
                 DialogResult = DialogResult.OK;
@@ -193,7 +229,7 @@ public class ProveedorModalForm : Form
         }
         catch (Exception ex)
         {
-            _lblError.Text = ex.Message;
+            MessageBox.Show($"Error al guardar proveedor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally
         {

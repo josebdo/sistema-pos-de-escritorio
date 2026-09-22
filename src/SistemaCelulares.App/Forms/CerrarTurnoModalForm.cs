@@ -33,9 +33,9 @@ public class CerrarTurnoModalForm : Form
 
     private void InitializeCustomComponents()
     {
-        Text = $"Cierre y Arqueo de Caja - Turno #{_turno.Id}";
-        Size = new Size(500, 560);
-        StartPosition = FormStartPosition.CenterParent;
+        Text = "Cierre y Arqueo de Turno de Caja";
+        Size = new Size(520, 640);
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

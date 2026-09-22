@@ -20,6 +20,7 @@ public interface IProductoService
         string? sku = null,
         string? codigoBarras = null,
         string? descripcion = null,
+        bool requiereSerie = false,
         CancellationToken cancellationToken = default);
 
     Task<bool> ActualizarProductoAsync(
@@ -37,4 +38,10 @@ public interface IProductoService
     Task<bool> CambiarEstadoActivoAsync(int id, bool activo, CancellationToken cancellationToken = default);
     Task<bool> AjustarStockAsync(int productoId, int nuevoStock, string? motivo = null, CancellationToken cancellationToken = default);
     Task<List<Producto>> ObtenerProductosBajoStockAsync(CancellationToken cancellationToken = default);
+
+    // Métodos para Unidades físicas e IMEI
+    Task<List<UnidadProducto>> ObtenerUnidadesPorProductoAsync(int productoId, EstadoUnidadProducto? estado = null, CancellationToken cancellationToken = default);
+    Task<UnidadProducto?> ObtenerUnidadPorImeiAsync(string imei, CancellationToken cancellationToken = default);
+    Task<UnidadProducto> RegistrarUnidadImeiAsync(int productoId, string imei, string? notas = null, CancellationToken cancellationToken = default);
+    Task<bool> ValidarImeiDisponibleAsync(string imei, CancellationToken cancellationToken = default);
 }

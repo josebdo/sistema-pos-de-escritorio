@@ -15,4 +15,15 @@ public class DetalleVenta
     public decimal CostoUnitario { get; set; }
     public decimal Itbis { get; set; }
     public decimal Subtotal { get; set; }
+
+    /// <summary>
+    /// En caso de celular con serie, referencia a la unidad física vendida.
+    /// </summary>
+    public int? UnidadProductoId { get; set; }
+    public virtual UnidadProducto? UnidadProducto { get; set; }
+
+    /// <summary>
+    /// IMEI registrado al momento de la venta para trazabilidad y garantía en ticket.
+    /// </summary>
+    public string? Imei { get; set; }
 }

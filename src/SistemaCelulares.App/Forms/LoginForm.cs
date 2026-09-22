@@ -26,7 +26,7 @@ public class LoginForm : Form
 
     private void InitializeCustomComponents()
     {
-        Text = "Sistema de Celulares - Inicio de Sesión";
+        Text = "Veyra POS - Inicio de Sesión";
         Size = new Size(460, 580);
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -59,11 +59,11 @@ public class LoginForm : Form
 
         var lblTitulo = new Label
         {
-            Text = "Gestión de Celulares",
-            Font = UITheme.TitleFont,
-            ForeColor = UITheme.DarkBg,
+            Text = "Veyra POS",
+            Font = new Font("Segoe UI", 18F, FontStyle.Bold),
+            ForeColor = Color.FromArgb(26, 35, 126),
             AutoSize = false,
-            Size = new Size(342, 30),
+            Size = new Size(342, 36),
             Location = new Point(24, 70),
             TextAlign = ContentAlignment.MiddleCenter
         };
@@ -71,12 +71,12 @@ public class LoginForm : Form
 
         var lblSubtitulo = new Label
         {
-            Text = "Ingrese sus credenciales para acceder",
+            Text = "Sistema Punto de Venta y Gestión de Celulares",
             Font = UITheme.SmallFont,
             ForeColor = UITheme.TextMuted,
             AutoSize = false,
             Size = new Size(342, 20),
-            Location = new Point(24, 102),
+            Location = new Point(24, 106),
             TextAlign = ContentAlignment.MiddleCenter
         };
         card.Controls.Add(lblSubtitulo);

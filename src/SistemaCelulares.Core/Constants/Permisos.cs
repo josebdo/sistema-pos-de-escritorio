@@ -41,6 +41,18 @@ public static class Permisos
     public const string VentasAnular = "Ventas.Anular";
     public const string VentasHistorial = "Ventas.Historial";
 
+    // Módulo: Clientes
+    public const string ClientesVer = "Clientes.Ver";
+    public const string ClientesCrear = "Clientes.Crear";
+    public const string ClientesEditar = "Clientes.Editar";
+    public const string ClientesEliminar = "Clientes.Eliminar";
+
+    // Módulo: Taller y Reparaciones
+    public const string ReparacionesVer = "Reparaciones.Ver";
+    public const string ReparacionesCrear = "Reparaciones.Crear";
+    public const string ReparacionesEditar = "Reparaciones.Editar";
+    public const string ReparacionesCobrar = "Reparaciones.Cobrar";
+
     // Módulo: Finanzas
     public const string FinanzasMovimientosRegistrar = "Finanzas.MovimientosRegistrar";
     public const string FinanzasReportesVer = "Finanzas.ReportesVer";
@@ -66,6 +78,12 @@ public static class Permisos
         new(RolesEditar, "Roles", "Modificar permisos de roles personalizados"),
         new(RolesEliminar, "Roles", "Eliminar roles personalizados"),
 
+        // Clientes
+        new(ClientesVer, "Clientes", "Ver lista e historial de clientes"),
+        new(ClientesCrear, "Clientes", "Registrar nuevos clientes"),
+        new(ClientesEditar, "Clientes", "Editar datos y descuentos de clientes"),
+        new(ClientesEliminar, "Clientes", "Desactivar clientes"),
+
         // Turnos
         new(TurnosAbrir, "Caja", "Abrir turno de caja con monto inicial"),
         new(TurnosCerrar, "Caja", "Cerrar turno de caja y registrar arqueo"),
@@ -88,6 +106,12 @@ public static class Permisos
         new(VentasRegistrar, "Ventas", "Registrar y cobrar ventas"),
         new(VentasAnular, "Ventas", "Anular ventas registradas"),
         new(VentasHistorial, "Ventas", "Consultar historial de ventas"),
+
+        // Reparaciones
+        new(ReparacionesVer, "Reparaciones", "Ver listado y órdenes de reparación"),
+        new(ReparacionesCrear, "Reparaciones", "Registrar ingreso de equipos al taller"),
+        new(ReparacionesEditar, "Reparaciones", "Actualizar estado y diagnóstico de reparaciones"),
+        new(ReparacionesCobrar, "Reparaciones", "Cobrar y entregar equipos reparados"),
 
         // Finanzas
         new(FinanzasMovimientosRegistrar, "Finanzas", "Registrar gastos e ingresos del negocio"),

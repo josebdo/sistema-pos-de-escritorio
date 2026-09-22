@@ -31,8 +31,8 @@ public class RolModalForm : Form
     private void InitializeCustomComponents()
     {
         Text = _rolIdParaEditar.HasValue ? "Editar Rol y Permisos" : "Crear Rol Personalizado";
-        Size = new Size(620, 680);
-        StartPosition = FormStartPosition.CenterParent;
+        Size = new Size(650, 700);
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -42,7 +42,7 @@ public class RolModalForm : Form
         var panelPrincipal = new Panel
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(20)
+            Padding = new Padding(25, 20, 25, 20)
         };
         Controls.Add(panelPrincipal);
 
@@ -52,33 +52,33 @@ public class RolModalForm : Form
             Text = _rolIdParaEditar.HasValue ? "Configurar Rol de Acceso" : "Nuevo Rol Personalizado",
             Font = UITheme.SubtitleFont,
             ForeColor = UITheme.DarkBg,
-            Location = new Point(0, 0),
+            Location = new Point(25, 18),
             AutoSize = true
         };
         panelPrincipal.Controls.Add(lblTitulo);
 
         // Nombre
-        var lblNom = new Label { Text = "Nombre del Rol *", Font = UITheme.SectionFont, Location = new Point(0, 35), AutoSize = true };
+        var lblNom = new Label { Text = "Nombre del Rol *", Font = UITheme.SectionFont, Location = new Point(25, 52), AutoSize = true };
         panelPrincipal.Controls.Add(lblNom);
 
-        _txtNombre = new TextBox { Location = new Point(0, 58), Size = new Size(560, 28) };
+        _txtNombre = new TextBox { Location = new Point(25, 74), Size = new Size(580, 28) };
         panelPrincipal.Controls.Add(_txtNombre);
 
         // Descripción
-        var lblDesc = new Label { Text = "Descripción / Propósito", Font = UITheme.BodyFont, Location = new Point(0, 92), AutoSize = true };
+        var lblDesc = new Label { Text = "Descripción / Propósito", Font = UITheme.BodyFont, Location = new Point(25, 110), AutoSize = true };
         panelPrincipal.Controls.Add(lblDesc);
 
-        _txtDescripcion = new TextBox { Location = new Point(0, 114), Size = new Size(560, 28) };
+        _txtDescripcion = new TextBox { Location = new Point(25, 132), Size = new Size(580, 28) };
         panelPrincipal.Controls.Add(_txtDescripcion);
 
         // Sección de Permisos
-        var lblPerm = new Label { Text = "Catálogo de Permisos Asignados (RBAC):", Font = UITheme.SectionFont, Location = new Point(0, 150), AutoSize = true };
+        var lblPerm = new Label { Text = "Catálogo de Permisos Asignados (RBAC):", Font = UITheme.SectionFont, Location = new Point(25, 170), AutoSize = true };
         panelPrincipal.Controls.Add(lblPerm);
 
         var contenedorScroll = new Panel
         {
-            Location = new Point(0, 175),
-            Size = new Size(560, 360),
+            Location = new Point(25, 195),
+            Size = new Size(580, 360),
             AutoScroll = true,
             BackColor = Color.White,
             BorderStyle = BorderStyle.FixedSingle,
@@ -96,14 +96,14 @@ public class RolModalForm : Form
         panelPrincipal.Controls.Add(contenedorScroll);
 
         // Error
-        _lblError = new Label { Text = string.Empty, Font = UITheme.SmallFont, ForeColor = UITheme.Danger, Location = new Point(0, 545), Size = new Size(560, 25) };
+        _lblError = new Label { Text = string.Empty, Font = UITheme.SmallFont, ForeColor = UITheme.Danger, Location = new Point(25, 565), Size = new Size(580, 25) };
         panelPrincipal.Controls.Add(_lblError);
 
         // Botones
         var panelBotones = new FlowLayoutPanel
         {
-            Location = new Point(0, 575),
-            Size = new Size(560, 45),
+            Location = new Point(25, 595),
+            Size = new Size(580, 45),
             FlowDirection = FlowDirection.RightToLeft
         };
 

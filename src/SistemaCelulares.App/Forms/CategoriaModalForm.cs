@@ -28,7 +28,7 @@ public class CategoriaModalForm : Form
     {
         Text = _categoriaIdParaEditar.HasValue ? "Editar Categoría" : "Nueva Categoría de Productos";
         Size = new Size(460, 420);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

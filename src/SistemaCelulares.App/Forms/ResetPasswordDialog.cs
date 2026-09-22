@@ -27,9 +27,9 @@ public class ResetPasswordDialog : Form
 
     private void InitializeCustomComponents()
     {
-        Text = "Resetear Contraseña";
-        Size = new Size(420, 320);
-        StartPosition = FormStartPosition.CenterParent;
+        Text = $"Restablecer Contraseña - {_targetUsuarioNombre}";
+        Size = new Size(460, 360);
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -38,10 +38,10 @@ public class ResetPasswordDialog : Form
 
         var card = new Panel
         {
-            Size = new Size(360, 250),
-            Location = new Point(22, 15),
+            Size = new Size(400, 265),
+            Location = new Point(22, 18),
             BackColor = Color.White,
-            Padding = new Padding(16)
+            Padding = new Padding(20)
         };
         Controls.Add(card);
 

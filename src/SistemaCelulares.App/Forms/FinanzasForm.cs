@@ -57,51 +57,58 @@ public class FinanzasForm : Form
         BackColor = UITheme.AppBg;
         Font = UITheme.BodyFont;
 
-        // Top Header
+        // 1. Top Header
         var headerPanel = new Panel
         {
             Dock = DockStyle.Top,
             Height = 65,
             BackColor = Color.White,
-            Padding = new Padding(24, 12, 24, 12)
+            Padding = new Padding(20, 10, 20, 10)
         };
-        Controls.Add(headerPanel);
+
+        var pnlHeaderLeft = new Panel
+        {
+            Dock = DockStyle.Left,
+            AutoSize = true,
+            Padding = new Padding(0)
+        };
 
         var lblTitulo = new Label
         {
             Text = "📊 Control Financiero del Negocio",
             Font = UITheme.TitleFont,
             ForeColor = UITheme.DarkBg,
-            Location = new Point(24, 12),
+            Location = new Point(0, 4),
             AutoSize = true
         };
-        headerPanel.Controls.Add(lblTitulo);
+        pnlHeaderLeft.Controls.Add(lblTitulo);
 
         var lblSubtitulo = new Label
         {
-            Text = "Registro de gastos operativos, ingresos adicionales y balance neto en pesos dominicanos (RD$)",
+            Text = "Gastos operativos, compras, ingresos adicionales y balance neto en RD$",
             Font = UITheme.SmallFont,
             ForeColor = Color.Gray,
-            Location = new Point(26, 42),
+            Location = new Point(2, 32),
             AutoSize = true
         };
-        headerPanel.Controls.Add(lblSubtitulo);
+        pnlHeaderLeft.Controls.Add(lblSubtitulo);
+        headerPanel.Controls.Add(pnlHeaderLeft);
 
         // Action buttons on top right
         var panelTopButtons = new FlowLayoutPanel
         {
             Dock = DockStyle.Right,
-            Width = 520,
-            Height = 45,
+            AutoSize = true,
             FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(0, 5, 0, 0)
+            WrapContents = false,
+            Padding = new Padding(0, 8, 0, 0)
         };
-        headerPanel.Controls.Add(panelTopButtons);
 
         _btnRegistrarGasto = new Button
         {
             Text = "➖ Registrar Gasto",
-            Size = new Size(145, 36)
+            Size = new Size(140, 36),
+            Margin = new Padding(6, 0, 0, 0)
         };
         UITheme.AplicarBotonSecundario(_btnRegistrarGasto);
         _btnRegistrarGasto.ForeColor = UITheme.Danger;
@@ -111,7 +118,8 @@ public class FinanzasForm : Form
         _btnRegistrarIngreso = new Button
         {
             Text = "➕ Registrar Ingreso",
-            Size = new Size(145, 36)
+            Size = new Size(145, 36),
+            Margin = new Padding(6, 0, 0, 0)
         };
         UITheme.AplicarBotonPrimario(_btnRegistrarIngreso);
         _btnRegistrarIngreso.Click += async (s, e) => await AbrirModalRegistrarAsync(TipoMovimientoFinanciero.Ingreso);
@@ -120,21 +128,22 @@ public class FinanzasForm : Form
         _btnGestionarCategorias = new Button
         {
             Text = "🏷️ Categorías",
-            Size = new Size(115, 36)
+            Size = new Size(115, 36),
+            Margin = new Padding(6, 0, 0, 0)
         };
         UITheme.AplicarBotonSecundario(_btnGestionarCategorias);
         _btnGestionarCategorias.Click += async (s, e) => await AbrirModalCategoriasAsync();
         panelTopButtons.Controls.Add(_btnGestionarCategorias);
+        headerPanel.Controls.Add(panelTopButtons);
 
-        // KPI Panel
+        // 2. KPI Panel
         var kpiPanel = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 110,
+            Height = 100,
             BackColor = UITheme.AppBg,
-            Padding = new Padding(24, 12, 24, 12)
+            Padding = new Padding(20, 10, 20, 10)
         };
-        Controls.Add(kpiPanel);
 
         var kpiTable = new TableLayoutPanel
         {
@@ -148,55 +157,56 @@ public class FinanzasForm : Form
         kpiTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
         kpiPanel.Controls.Add(kpiTable);
 
-        kpiTable.Controls.Add(CrearCardKpi("INGRESOS REGISTRADOS", "RD$ 0.00", UITheme.Success, out _lblKpiIngresos), 0, 0);
+        kpiTable.Controls.Add(CrearCardKpi("INGRESOS TOTALES", "RD$ 0.00", UITheme.Success, out _lblKpiIngresos), 0, 0);
         kpiTable.Controls.Add(CrearCardKpi("GASTOS OPERATIVOS", "RD$ 0.00", UITheme.Danger, out _lblKpiGastosOperativos), 1, 0);
-        kpiTable.Controls.Add(CrearCardKpi("COMPRAS DE INVENTARIO", "RD$ 0.00", UITheme.Warning, out _lblKpiComprasMercancia), 2, 0);
-        kpiTable.Controls.Add(CrearCardKpi("BALANCE / UTILIDAD NETA", "RD$ 0.00", UITheme.Primary, out _lblKpiUtilidadNeta), 3, 0);
+        kpiTable.Controls.Add(CrearCardKpi("COMPRAS INVENTARIO", "RD$ 0.00", UITheme.Warning, out _lblKpiComprasMercancia), 2, 0);
+        kpiTable.Controls.Add(CrearCardKpi("UTILIDAD / BALANCE", "RD$ 0.00", UITheme.Primary, out _lblKpiUtilidadNeta), 3, 0);
 
-        // Filter Bar Panel
-        var filterPanel = new Panel
+        // 3. Filter Bar Panel
+        var filterPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 55,
+            Height = 48,
             BackColor = Color.White,
-            Padding = new Padding(24, 10, 24, 10)
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(20, 8, 20, 4)
         };
-        Controls.Add(filterPanel);
 
-        var lblFiltroPeriodo = new Label { Text = "Periodo:", Location = new Point(24, 16), AutoSize = true, Font = UITheme.SmallFont };
+        var lblFiltroPeriodo = new Label { Text = "Periodo:", AutoSize = true, Font = UITheme.SmallFont, Margin = new Padding(0, 6, 6, 0) };
         filterPanel.Controls.Add(lblFiltroPeriodo);
 
         _cboPeriodoRapido = new ComboBox
         {
-            Location = new Point(78, 13),
-            Size = new Size(130, 26),
-            DropDownStyle = ComboBoxStyle.DropDownList
+            Size = new Size(115, 26),
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Margin = new Padding(0, 2, 10, 0)
         };
         _cboPeriodoRapido.Items.AddRange(new object[] { "Hoy", "Esta Semana", "Este Mes", "Todo el Año", "Personalizado" });
         _cboPeriodoRapido.SelectedIndex = 2; // Este Mes
         _cboPeriodoRapido.SelectedIndexChanged += (s, e) => OnPeriodoRapidoCambiado();
         filterPanel.Controls.Add(_cboPeriodoRapido);
 
-        var lblDesde = new Label { Text = "Desde:", Location = new Point(225, 16), AutoSize = true, Font = UITheme.SmallFont };
+        var lblDesde = new Label { Text = "Desde:", AutoSize = true, Font = UITheme.SmallFont, Margin = new Padding(0, 6, 6, 0) };
         filterPanel.Controls.Add(lblDesde);
 
-        _dtpDesde = new DateTimePicker { Location = new Point(275, 13), Size = new Size(120, 26), Format = DateTimePickerFormat.Short };
+        _dtpDesde = new DateTimePicker { Size = new Size(110, 26), Format = DateTimePickerFormat.Short, Margin = new Padding(0, 2, 10, 0) };
         filterPanel.Controls.Add(_dtpDesde);
 
-        var lblHasta = new Label { Text = "Hasta:", Location = new Point(410, 16), AutoSize = true, Font = UITheme.SmallFont };
+        var lblHasta = new Label { Text = "Hasta:", AutoSize = true, Font = UITheme.SmallFont, Margin = new Padding(0, 6, 6, 0) };
         filterPanel.Controls.Add(lblHasta);
 
-        _dtpHasta = new DateTimePicker { Location = new Point(455, 13), Size = new Size(120, 26), Format = DateTimePickerFormat.Short };
+        _dtpHasta = new DateTimePicker { Size = new Size(110, 26), Format = DateTimePickerFormat.Short, Margin = new Padding(0, 2, 10, 0) };
         filterPanel.Controls.Add(_dtpHasta);
 
-        var lblTipo = new Label { Text = "Tipo:", Location = new Point(595, 16), AutoSize = true, Font = UITheme.SmallFont };
+        var lblTipo = new Label { Text = "Tipo:", AutoSize = true, Font = UITheme.SmallFont, Margin = new Padding(0, 6, 6, 0) };
         filterPanel.Controls.Add(lblTipo);
 
         _cboFiltroTipo = new ComboBox
         {
-            Location = new Point(635, 13),
-            Size = new Size(130, 26),
-            DropDownStyle = ComboBoxStyle.DropDownList
+            Size = new Size(115, 26),
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Margin = new Padding(0, 2, 10, 0)
         };
         _cboFiltroTipo.Items.AddRange(new object[] { "Todos", "Solo Gastos", "Solo Ingresos" });
         _cboFiltroTipo.SelectedIndex = 0;
@@ -204,28 +214,33 @@ public class FinanzasForm : Form
 
         _btnFiltrar = new Button
         {
-            Text = "🔍 Filtrar / Actualizar",
-            Location = new Point(780, 10),
-            Size = new Size(150, 32)
+            Text = "🔍 Filtrar",
+            Size = new Size(100, 30),
+            Margin = new Padding(0, 0, 0, 0)
         };
         UITheme.AplicarBotonSecundario(_btnFiltrar);
         _btnFiltrar.Click += async (s, e) => await CargarFinanzasAsync();
         filterPanel.Controls.Add(_btnFiltrar);
 
-        // Grid Container Panel
+        // 4. Grid Container Panel
         var mainContainer = new Panel
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(24, 15, 24, 15),
+            Padding = new Padding(20, 10, 20, 15),
             BackColor = UITheme.AppBg
         };
+
+        // Orden de Docking correcto en WinForms (Fill primero, luego Tops de abajo hacia arriba)
         Controls.Add(mainContainer);
+        Controls.Add(filterPanel);
+        Controls.Add(kpiPanel);
+        Controls.Add(headerPanel);
 
         var gridCard = new Panel
         {
             Dock = DockStyle.Fill,
             BackColor = Color.White,
-            Padding = new Padding(15)
+            Padding = new Padding(1)
         };
         mainContainer.Controls.Add(gridCard);
 

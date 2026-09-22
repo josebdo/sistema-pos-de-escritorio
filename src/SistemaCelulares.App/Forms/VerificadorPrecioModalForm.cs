@@ -50,9 +50,9 @@ public class VerificadorPrecioModalForm : Form
 
     private void InitializeCustomComponents()
     {
-        Text = "🔍 Lector de Código de Barras / Verificador de Precios";
-        Size = new Size(680, 560);
-        StartPosition = FormStartPosition.CenterParent;
+        Text = "Consultor de Precios y Disponibilidad en Tiempo Real";
+        Size = new Size(680, 580);
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

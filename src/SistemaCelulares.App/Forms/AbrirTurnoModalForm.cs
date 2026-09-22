@@ -27,7 +27,7 @@ public class AbrirTurnoModalForm : Form
     {
         Text = "Apertura de Turno de Caja";
         Size = new Size(460, 420);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

@@ -29,7 +29,7 @@ public class CategoriasFinancierasModalForm : Form
     {
         Text = "Gestión de Categorías de Gastos e Ingresos";
         Size = new Size(720, 580);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

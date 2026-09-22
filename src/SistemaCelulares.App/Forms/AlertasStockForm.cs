@@ -70,28 +70,32 @@ public class AlertasStockForm : Form
             AutoSize = true
         };
         header.Controls.Add(lblSub);
-        panelPrincipal.Controls.Add(header);
 
-        // KPI Summary Cards
-        var panelKpis = new FlowLayoutPanel
+        // KPI Summary Cards (TableLayoutPanel with 3 responsive columns)
+        var panelKpis = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 100,
+            Height = 85,
+            ColumnCount = 3,
+            RowCount = 1,
             Padding = new Padding(0),
             Margin = new Padding(0, 0, 0, 10)
         };
+        panelKpis.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33f));
+        panelKpis.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33f));
+        panelKpis.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34f));
 
         _cardAgotados = CrearCardKpi("🚫 Agotados (Stock 0)", "0 productos", UITheme.Danger);
-        panelKpis.Controls.Add(_cardAgotados);
+        _cardAgotados.Margin = new Padding(0, 0, 10, 0);
+        panelKpis.Controls.Add(_cardAgotados, 0, 0);
 
         _cardCriticos = CrearCardKpi("⚠️ Stock Bajo / Crítico", "0 productos", UITheme.Warning);
-        panelKpis.Controls.Add(_cardCriticos);
+        _cardCriticos.Margin = new Padding(5, 0, 10, 0);
+        panelKpis.Controls.Add(_cardCriticos, 1, 0);
 
         _cardInversion = CrearCardKpi("💰 Inversión Estimada Reposición", "RD$0.00", UITheme.Primary);
-        _cardInversion.Width = 320;
-        panelKpis.Controls.Add(_cardInversion);
-
-        panelPrincipal.Controls.Add(panelKpis);
+        _cardInversion.Margin = new Padding(5, 0, 0, 0);
+        panelKpis.Controls.Add(_cardInversion, 2, 0);
 
         // Toolbar
         var toolbar = new Panel { Dock = DockStyle.Top, Height = 48 };
@@ -109,7 +113,6 @@ public class AlertasStockForm : Form
         panelBotones.Controls.Add(_btnComprarSeleccionado);
 
         toolbar.Controls.Add(panelBotones);
-        panelPrincipal.Controls.Add(toolbar);
 
         // DataGridView
         var panelGrid = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(1) };
@@ -117,16 +120,20 @@ public class AlertasStockForm : Form
         UITheme.EstilizarDataGridView(_gridAlertas);
         ConfigurarColumnas();
         panelGrid.Controls.Add(_gridAlertas);
+
+        // Add to panel in reverse docking order so Header is at the top, then KPIs, then Toolbar, then Grid
         panelPrincipal.Controls.Add(panelGrid);
+        panelPrincipal.Controls.Add(toolbar);
+        panelPrincipal.Controls.Add(panelKpis);
+        panelPrincipal.Controls.Add(header);
     }
 
     private Panel CrearCardKpi(string titulo, string valorInicial, Color color)
     {
         var card = new Panel
         {
-            Size = new Size(240, 85),
+            Dock = DockStyle.Fill,
             BackColor = Color.White,
-            Margin = new Padding(0, 0, 15, 10),
             Padding = new Padding(15)
         };
 

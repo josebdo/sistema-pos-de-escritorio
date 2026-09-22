@@ -20,3 +20,8 @@ appsettings.Local.json
 ## Logs and test results
 [Tt]est[Rr]esults/
 *.log
+
+## Installer & Publish outputs
+publish/
+installer-output/
+

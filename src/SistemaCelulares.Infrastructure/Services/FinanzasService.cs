@@ -124,10 +124,19 @@ public class FinanzasService : IFinanzasService
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        // Obtener compras a proveedores en el periodo
-        var totalCompras = await _context.Compras
+        // Obtener compras a proveedores en el periodo (evaluado en memoria para SQLite)
+        var compras = await _context.Compras
             .Where(c => c.FechaCompra >= fDesde && c.FechaCompra <= fHasta)
-            .SumAsync(c => c.Total, cancellationToken);
+            .Select(c => c.Total)
+            .ToListAsync(cancellationToken);
+        var totalCompras = compras.Sum();
+
+        // Obtener ventas comerciales en el periodo
+        var ventas = await _context.Ventas
+            .Where(v => v.FechaVenta >= fDesde && v.FechaVenta <= fHasta && v.Estado == EstadoVenta.Completada)
+            .Select(v => v.Total)
+            .ToListAsync(cancellationToken);
+        var totalVentas = ventas.Sum();
 
         var totalOtrosIngresos = movimientos
             .Where(m => m.Tipo == TipoMovimientoFinanciero.Ingreso)
@@ -152,11 +161,16 @@ public class FinanzasService : IFinanzasService
             .GroupBy(m => m.CategoriaFinanciera?.Nombre ?? "Sin Categoría")
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
 
+        if (totalVentas > 0)
+        {
+            ingresosPorCat["Ventas del Negocio (POS)"] = totalVentas;
+        }
+
         return new BalanceNetoDto
         {
             Desde = desde,
             Hasta = hasta,
-            TotalVentas = 0, // Las ventas se integrarán en Fase 10/Ventas
+            TotalVentas = totalVentas,
             TotalOtrosIngresos = totalOtrosIngresos,
             TotalGastosOperativos = totalGastosOperativos,
             TotalComprasMercancia = totalCompras,

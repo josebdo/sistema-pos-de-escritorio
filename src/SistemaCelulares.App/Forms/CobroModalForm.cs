@@ -67,7 +67,7 @@ public class CobroModalForm : Form
     {
         Text = "Cobro y Selección de Método de Pago";
         Size = new Size(680, 680);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

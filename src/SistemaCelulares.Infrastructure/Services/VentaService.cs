@@ -10,11 +10,13 @@ public class VentaService : IVentaService
 {
     private readonly AppDbContext _context;
     private readonly IPagoService _pagoService;
+    private readonly IConfiguracionNegocioService? _configNegocioService;
 
-    public VentaService(AppDbContext context, IPagoService pagoService)
+    public VentaService(AppDbContext context, IPagoService pagoService, IConfiguracionNegocioService? configNegocioService = null)
     {
         _context = context;
         _pagoService = pagoService;
+        _configNegocioService = configNegocioService;
     }
 
     public async Task<ResultadoVentaDto> RegistrarVentaAsync(RegistrarVentaRequestDto request)
@@ -67,6 +69,31 @@ public class VentaService : IVentaService
             if (producto.StockActual < item.Cantidad)
             {
                 errores.Add($"Stock insuficiente para '{producto.Nombre}'. Stock disponible: {producto.StockActual}, solicitado: {item.Cantidad}.");
+            }
+
+            if (producto.RequiereSerie)
+            {
+                if (string.IsNullOrWhiteSpace(item.Imei) && !item.UnidadProductoId.HasValue)
+                {
+                    errores.Add($"El producto '{producto.Nombre}' requiere seleccionar o ingresar el IMEI del celular para la venta y garantía.");
+                }
+                else
+                {
+                    var imeiBuscado = item.Imei?.Trim().ToLower();
+                    var unidad = await _context.UnidadesProducto
+                        .FirstOrDefaultAsync(u => u.ProductoId == producto.Id &&
+                            (u.Id == item.UnidadProductoId || (imeiBuscado != null && u.Imei.ToLower() == imeiBuscado)));
+
+                    if (unidad == null || unidad.Estado != EstadoUnidadProducto.EnStock)
+                    {
+                        errores.Add($"La unidad celular con IMEI '{item.Imei}' no está disponible en stock para '{producto.Nombre}'.");
+                    }
+                    else
+                    {
+                        item.UnidadProductoId = unidad.Id;
+                        item.Imei = unidad.Imei;
+                    }
+                }
             }
 
             productosDict[producto.Id] = producto;
@@ -164,15 +191,31 @@ public class VentaService : IVentaService
             decimal itbisLinea = item.AplicaItbis ? Math.Round(totalLinea * 0.18m / 1.18m, 2) : 0m;
             decimal subtotalLinea = totalLinea - itbisLinea;
 
-            nuevaVenta.Detalles.Add(new DetalleVenta
+            var detalle = new DetalleVenta
             {
                 ProductoId = prod.Id,
                 Cantidad = item.Cantidad,
                 PrecioUnitario = prod.PrecioVenta,
                 CostoUnitario = prod.PrecioCosto,
                 Itbis = itbisLinea,
-                Subtotal = subtotalLinea
-            });
+                Subtotal = subtotalLinea,
+                UnidadProductoId = item.UnidadProductoId,
+                Imei = item.Imei
+            };
+
+            nuevaVenta.Detalles.Add(detalle);
+
+            // Actualizar unidad física vendida si aplica
+            if (item.UnidadProductoId.HasValue)
+            {
+                var unidadVendida = await _context.UnidadesProducto.FindAsync(item.UnidadProductoId.Value);
+                if (unidadVendida != null)
+                {
+                    unidadVendida.Estado = EstadoUnidadProducto.Vendido;
+                    unidadVendida.FechaVenta = DateTime.UtcNow;
+                    unidadVendida.Venta = nuevaVenta;
+                }
+            }
 
             // Decremento de stock atómico
             prod.StockActual -= item.Cantidad;
@@ -254,13 +297,25 @@ public class VentaService : IVentaService
 
         if (venta == null || venta.Estado == EstadoVenta.Anulada) return false;
 
-        // 1. Revertir Stock
+        // 1. Revertir Stock y Unidades Físicas
         foreach (var d in venta.Detalles)
         {
             var prod = await _context.Productos.FindAsync(d.ProductoId);
             if (prod != null)
             {
                 prod.StockActual += d.Cantidad;
+            }
+
+            if (d.UnidadProductoId.HasValue)
+            {
+                var unidad = await _context.UnidadesProducto.FindAsync(d.UnidadProductoId.Value);
+                if (unidad != null)
+                {
+                    unidad.Estado = EstadoUnidadProducto.EnStock;
+                    unidad.FechaVenta = null;
+                    unidad.VentaId = null;
+                    unidad.Venta = null;
+                }
             }
         }
 
@@ -339,8 +394,16 @@ public class VentaService : IVentaService
             _ => "TICKET DE VENTA"
         };
 
+        var configNegocio = _configNegocioService != null 
+            ? await _configNegocioService.ObtenerConfiguracionAsync() 
+            : null;
+
         var ticket = new TicketVentaDto
         {
+            NombreEmpresa = !string.IsNullOrWhiteSpace(configNegocio?.NombreEmpresa) ? configNegocio.NombreEmpresa : "TIENDA DE CELULARES",
+            RncEmpresa = !string.IsNullOrWhiteSpace(configNegocio?.RncCedula) ? configNegocio.RncCedula : "000-0000000-0",
+            TelefonoEmpresa = !string.IsNullOrWhiteSpace(configNegocio?.Telefono) ? configNegocio.Telefono : "(809) 000-0000",
+            DireccionEmpresa = !string.IsNullOrWhiteSpace(configNegocio?.Direccion) ? (configNegocio.Direccion + (!string.IsNullOrWhiteSpace(configNegocio.Ciudad) ? $", {configNegocio.Ciudad}" : "")) : "República Dominicana",
             NumeroFactura = venta.NumeroFactura,
             Ncf = venta.Ncf,
             TipoComprobanteDescripcion = tipoDesc,
@@ -364,7 +427,9 @@ public class VentaService : IVentaService
                 Cantidad = d.Cantidad,
                 PrecioUnitario = d.PrecioUnitario,
                 CostoUnitario = d.CostoUnitario,
-                AplicaItbis = d.Itbis > 0
+                AplicaItbis = d.Itbis > 0,
+                UnidadProductoId = d.UnidadProductoId,
+                Imei = d.Imei
             }).ToList()
         };
 

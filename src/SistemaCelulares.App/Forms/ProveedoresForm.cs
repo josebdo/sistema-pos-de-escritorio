@@ -68,49 +68,46 @@ public class ProveedoresForm : Form
         header.Controls.Add(lblSub);
         panelPrincipal.Controls.Add(header);
 
-        // Toolbar
-        var toolbar = new Panel { Dock = DockStyle.Top, Height = 55 };
-
-        var lblBuscar = new Label { Text = "🔍 Buscar:", Location = new Point(0, 16), AutoSize = true, Font = UITheme.SectionFont };
-        toolbar.Controls.Add(lblBuscar);
-
-        _txtBuscar = new TextBox { Location = new Point(70, 13), Size = new Size(260, 28), Font = new Font("Segoe UI", 9.5F) };
-        _txtBuscar.TextChanged += (s, e) => FiltrarGrid();
-        toolbar.Controls.Add(_txtBuscar);
-
-        _chkSoloActivos = new CheckBox { Text = "Solo activos", Location = new Point(350, 16), Checked = true, AutoSize = true };
-        _chkSoloActivos.CheckedChanged += async (s, e) => await RecargarProveedoresAsync();
-        toolbar.Controls.Add(_chkSoloActivos);
-
-        // Panel Botones Derecha
-        var panelBotones = new FlowLayoutPanel
+        // Toolbar Contenedor
+        var flowToolbar = new FlowLayoutPanel
         {
-            Dock = DockStyle.Right,
-            FlowDirection = FlowDirection.RightToLeft,
-            Width = 420,
-            Height = 50
+            Dock = DockStyle.Top,
+            Height = 45,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Padding = new Padding(0, 4, 0, 6)
         };
 
-        _btnNuevo = new Button { Text = "➕ Nuevo Proveedor", Size = new Size(140, 38) };
+        var lblBuscar = new Label { Text = "🔍 Buscar:", AutoSize = true, Font = UITheme.SectionFont, Margin = new Padding(0, 5, 4, 0) };
+        flowToolbar.Controls.Add(lblBuscar);
+
+        _txtBuscar = new TextBox { Size = new Size(180, 26), Font = new Font("Segoe UI", 9F), Margin = new Padding(0, 2, 8, 0) };
+        _txtBuscar.TextChanged += (s, e) => FiltrarGrid();
+        flowToolbar.Controls.Add(_txtBuscar);
+
+        _chkSoloActivos = new CheckBox { Text = "Solo activos", Checked = true, AutoSize = true, Margin = new Padding(0, 4, 15, 0) };
+        _chkSoloActivos.CheckedChanged += async (s, e) => await RecargarProveedoresAsync();
+        flowToolbar.Controls.Add(_chkSoloActivos);
+
+        _btnNuevo = new Button { Text = "➕ Nuevo", Size = new Size(95, 32), Margin = new Padding(0, 0, 6, 0) };
         UITheme.AplicarBotonPrimario(_btnNuevo);
         _btnNuevo.Click += async (s, e) => await AbrirCrearProveedorAsync();
         _btnNuevo.Visible = _sesionActual.TienePermiso(Permisos.ProveedoresGestionar);
-        panelBotones.Controls.Add(_btnNuevo);
+        flowToolbar.Controls.Add(_btnNuevo);
 
-        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(95, 38) };
+        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(85, 32), Margin = new Padding(0, 0, 6, 0) };
         UITheme.AplicarBotonSecundario(_btnEditar);
         _btnEditar.Click += async (s, e) => await AbrirEditarProveedorAsync();
         _btnEditar.Visible = _sesionActual.TienePermiso(Permisos.ProveedoresGestionar);
-        panelBotones.Controls.Add(_btnEditar);
+        flowToolbar.Controls.Add(_btnEditar);
 
-        _btnToggleEstado = new Button { Text = "🔄 Activar/Desactivar", Size = new Size(140, 38) };
+        _btnToggleEstado = new Button { Text = "🔄 Act/Desc", Size = new Size(95, 32), Margin = new Padding(0, 0, 6, 0) };
         UITheme.AplicarBotonSecundario(_btnToggleEstado);
         _btnToggleEstado.Click += async (s, e) => await ToggleEstadoProveedorAsync();
         _btnToggleEstado.Visible = _sesionActual.TienePermiso(Permisos.ProveedoresGestionar);
-        panelBotones.Controls.Add(_btnToggleEstado);
+        flowToolbar.Controls.Add(_btnToggleEstado);
 
-        toolbar.Controls.Add(panelBotones);
-        panelPrincipal.Controls.Add(toolbar);
+        panelPrincipal.Controls.Add(flowToolbar);
 
         // DataGridView
         var panelGrid = new Panel

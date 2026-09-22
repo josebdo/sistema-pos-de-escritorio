@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using System.Text.Json;
+using SistemaCelulares.Core.Constants;
 using SistemaCelulares.Core.Interfaces;
 using SistemaCelulares.Core.Models;
 
@@ -10,10 +11,20 @@ public class ConfiguracionRedService : IConfiguracionRedService
     private readonly string _configFilePath;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
-    public ConfiguracionRedService(string? basePath = null)
+    public ConfiguracionRedService(string? basePathOrFilePath = null)
     {
-        string dir = basePath ?? AppDomain.CurrentDomain.BaseDirectory;
-        _configFilePath = Path.Combine(dir, "config_red.json");
+        if (string.IsNullOrWhiteSpace(basePathOrFilePath))
+        {
+            _configFilePath = AppPaths.RutaConfigRed;
+        }
+        else if (basePathOrFilePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        {
+            _configFilePath = basePathOrFilePath;
+        }
+        else
+        {
+            _configFilePath = Path.Combine(basePathOrFilePath, "config_red.json");
+        }
     }
 
     public ConfiguracionRedDto ObtenerConfiguracion()

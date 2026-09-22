@@ -32,7 +32,7 @@ public class CategoriasForm : Form
     {
         Text = "Categorías de Productos";
         Size = new Size(800, 520);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         BackColor = UITheme.AppBg;
         Font = UITheme.BodyFont;
 
@@ -60,32 +60,35 @@ public class CategoriasForm : Form
             AutoSize = true
         };
         header.Controls.Add(lblSub);
-        panelPrincipal.Controls.Add(header);
 
-        // Toolbar
-        var toolbar = new Panel { Dock = DockStyle.Top, Height = 48 };
-        var panelBotones = new FlowLayoutPanel { Dock = DockStyle.Right, FlowDirection = FlowDirection.RightToLeft, Width = 380, Height = 45 };
+        // Toolbar con FlowLayoutPanel auto-ajustable
+        var toolbar = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Padding = new Padding(0, 4, 0, 8)
+        };
 
-        _btnNuevo = new Button { Text = "➕ Nueva Categoría", Size = new Size(135, 36) };
+        _btnNuevo = new Button { Text = "➕ Nueva Categoría", Size = new Size(150, 36), Margin = new Padding(0, 0, 8, 4) };
         UITheme.AplicarBotonPrimario(_btnNuevo);
         _btnNuevo.Click += async (s, e) => await AbrirCrearCategoriaAsync();
-        _btnNuevo.Visible = _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
-        panelBotones.Controls.Add(_btnNuevo);
+        _btnNuevo.Visible = _sesionActual.EsSuperAdmin || _sesionActual.EsAdmin || _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
+        toolbar.Controls.Add(_btnNuevo);
 
-        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(95, 36) };
+        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(100, 36), Margin = new Padding(0, 0, 8, 4) };
         UITheme.AplicarBotonSecundario(_btnEditar);
         _btnEditar.Click += async (s, e) => await AbrirEditarCategoriaAsync();
-        _btnEditar.Visible = _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
-        panelBotones.Controls.Add(_btnEditar);
+        _btnEditar.Visible = _sesionActual.EsSuperAdmin || _sesionActual.EsAdmin || _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
+        toolbar.Controls.Add(_btnEditar);
 
-        _btnToggleEstado = new Button { Text = "🔄 Activar/Desactivar", Size = new Size(135, 36) };
+        _btnToggleEstado = new Button { Text = "🔄 Activar/Desactivar", Size = new Size(160, 36), Margin = new Padding(0, 0, 8, 4) };
         UITheme.AplicarBotonSecundario(_btnToggleEstado);
         _btnToggleEstado.Click += async (s, e) => await ToggleEstadoCategoriaAsync();
-        _btnToggleEstado.Visible = _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
-        panelBotones.Controls.Add(_btnToggleEstado);
-
-        toolbar.Controls.Add(panelBotones);
-        panelPrincipal.Controls.Add(toolbar);
+        _btnToggleEstado.Visible = _sesionActual.EsSuperAdmin || _sesionActual.EsAdmin || _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
+        toolbar.Controls.Add(_btnToggleEstado);
 
         // DataGridView
         var panelGrid = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(1) };
@@ -93,7 +96,11 @@ public class CategoriasForm : Form
         UITheme.EstilizarDataGridView(_gridCategorias);
         ConfigurarColumnas();
         panelGrid.Controls.Add(_gridCategorias);
+
+        // Agregar al panel principal en orden de acoplamiento correcto
         panelPrincipal.Controls.Add(panelGrid);
+        panelPrincipal.Controls.Add(toolbar);
+        panelPrincipal.Controls.Add(header);
     }
 
     private void ConfigurarColumnas()

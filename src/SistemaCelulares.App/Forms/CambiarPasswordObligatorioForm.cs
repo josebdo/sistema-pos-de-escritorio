@@ -25,9 +25,9 @@ public class CambiarPasswordObligatorioForm : Form
 
     private void InitializeCustomComponents()
     {
-        Text = "Cambio Obligatorio de Contraseña";
+        Text = "Actualización Obligatoria de Seguridad";
         Size = new Size(440, 480);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

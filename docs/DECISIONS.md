@@ -84,3 +84,50 @@
      - Requiere turno de caja activo (`TurnoId`), registra la sesión del cajero y vincula el cobro a través del servicio `IPagoService`.
 - **Motivo**: Cumplimiento de la normativa fiscal de la DGII de República Dominicana y control riguroso de inventario en punto de venta.
 - **Fecha**: 2026-09-20
+
+## DEC-011
+- **Estado**: VIGENTE
+- **Decisión**: Módulo de Clientes, Búsqueda Ágil y Descuentos para Clientes Frecuentes.
+  1. **Gestión Integral de Clientes**:
+     - Entidad `Cliente` con nombre completo, teléfono, email, cédula/RNC, dirección y notas.
+     - Posibilidad de venta a "Cliente Ocasional / Contado" sin registro forzoso.
+  2. **Búsqueda Ágil y Creación Rápida**:
+     - Búsqueda en punto de venta y taller por número de teléfono o nombre.
+     - Botón de creación rápida en modal para no interrumpir el flujo de venta o recepción.
+  3. **Fidelización y Descuentos**:
+     - Flag `EsFrecuente` con `PorcentajeDescuento` definido por cliente, calculando automáticamente el descuento sugerido en punto de venta.
+  4. **Historial Centralizado**:
+     - Consulta unificada de historial de compras y órdenes de reparación por cliente.
+- **Motivo**: Requisito clave del negocio de celulares para fidelización y trazabilidad de clientes en ventas y servicios técnicos.
+- **Fecha**: 2026-09-21
+
+## DEC-012
+- **Estado**: VIGENTE
+- **Decisión**: Modelo de Inventario Mixto (Artículos Seriados con IMEI vs Artículos por Cantidad).
+  1. **Trazabilidad Unitaria por IMEI**:
+     - Los teléfonos móviles (`RequiereSerie = true`) se rastrean individualmente mediante la entidad `UnidadProducto` con índice único para `Imei`.
+     - Ciclo de vida de cada unidad: `EnStock` $\rightarrow$ `Vendido` $\rightarrow$ `EnGarantia` / `Devuelto`.
+  2. **Artículos por Cantidad**:
+     - Accesorios, papelería y repuestos se administran mediante control de stock numérico estándar (`RequiereSerie = false`).
+  3. **Compras de Celulares**:
+     - Al comprar celulares a proveedores, se ingresan los IMEIs individuales correspondientes a las unidades recibidas, creándolas automáticamente en estado `EnStock`.
+  4. **Ventas y Garantías**:
+     - Al vender un celular, se exige la selección o escaneo del IMEI disponible, vinculando `UnidadProductoId` y `Imei` en `DetalleVenta` y actualizando el estado de la unidad a `Vendido`.
+     - En caso de anulación de venta, la unidad revierte a estado `EnStock`.
+- **Motivo**: Control indispensable para la venta de celulares, garantías y prevención de pérdidas de equipos de alto valor.
+- **Fecha**: 2026-09-21
+
+## DEC-013
+- **Estado**: VIGENTE
+- **Decisión**: Módulo de Taller y Reparaciones de Celulares con Flujo Simple e Integración de Caja.
+  1. **Flujo de Estados Simplificado**:
+     - Estados de la orden: `EnReparacion` $\rightarrow$ `ListaParaEntrega` $\rightarrow$ `Entregada` (o `Cancelada`).
+  2. **Recepción de Equipo**:
+     - Registro de cliente, marca, modelo, IMEI/serie, falla reportada, precio estimado y notas iniciales.
+     - Generación correlativa de código de orden (`REP-YYYY-XXXX`) y emisión de comprobante de recepción para el cliente.
+  3. **Cobro y Entrega Integrada**:
+     - Al entregar el equipo listo, se procesa el cobro a través de `IPagoService` registrando el ingreso en el turno de caja abierto (Efectivo, Tarjeta, Transferencia o Mixto).
+     - Bloqueo de entrega si el pago no es completado o no coincide con el precio final acordado.
+- **Motivo**: Servicio técnico organizado con cobranza controlada dentro de los turnos de caja de la tienda.
+- **Fecha**: 2026-09-21
+

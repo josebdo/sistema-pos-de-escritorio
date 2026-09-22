@@ -51,7 +51,7 @@ public class ProductosForm : Form
 
     private void InitializeCustomComponents()
     {
-        Text = "Catálogo de Productos e Inventario";
+        Text = "Catálogo de Productos y Precios";
         Size = new Size(1100, 680);
         BackColor = UITheme.AppBg;
         Font = UITheme.BodyFont;
@@ -67,7 +67,7 @@ public class ProductosForm : Form
         var header = new Panel { Dock = DockStyle.Top, Height = 60 };
         var lblTitulo = new Label
         {
-            Text = "Catálogo de Celulares y Accesorios",
+            Text = "Catálogo de Productos y Precios",
             Font = UITheme.TitleFont,
             ForeColor = UITheme.DarkBg,
             Location = new Point(0, 5),
@@ -77,22 +77,88 @@ public class ProductosForm : Form
 
         _lblResumen = new Label
         {
-            Text = "Cargando inventario...",
+            Text = "Cargando catálogo...",
             Font = UITheme.SmallFont,
             ForeColor = UITheme.TextMuted,
             Location = new Point(0, 35),
             AutoSize = true
         };
         header.Controls.Add(_lblResumen);
-        panelPrincipal.Controls.Add(header);
 
-        // Toolbar
-        var toolbar = new Panel { Dock = DockStyle.Top, Height = 55 };
+        // Toolbar Contenedor
+        var toolbarContenedor = new Panel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Padding = new Padding(0, 0, 0, 8)
+        };
 
-        var lblBuscar = new Label { Text = "🔍 Buscar / Escanear:", Location = new Point(0, 16), AutoSize = true, Font = UITheme.SectionFont };
-        toolbar.Controls.Add(lblBuscar);
+        // Fila 1: Botones de Acción
+        var flowBotones = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Padding = new Padding(0, 2, 0, 4)
+        };
 
-        _txtBuscar = new TextBox { Location = new Point(135, 13), Size = new Size(180, 28), Font = new Font("Segoe UI", 9.5F), PlaceholderText = "Escanear o buscar..." };
+        _btnNuevo = new Button { Text = "➕ Nuevo Producto", Size = new Size(140, 34), Margin = new Padding(0, 0, 6, 6) };
+        UITheme.AplicarBotonPrimario(_btnNuevo);
+        _btnNuevo.Click += async (s, e) => await AbrirCrearProductoAsync();
+        _btnNuevo.Visible = _sesionActual.EsSuperAdmin || _sesionActual.EsAdmin || _sesionActual.TienePermiso(Permisos.ProductosCrear);
+        flowBotones.Controls.Add(_btnNuevo);
+
+        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(85, 34), Margin = new Padding(0, 0, 6, 6) };
+        UITheme.AplicarBotonSecundario(_btnEditar);
+        _btnEditar.Click += async (s, e) => await AbrirEditarProductoAsync();
+        _btnEditar.Visible = _sesionActual.EsSuperAdmin || _sesionActual.EsAdmin || _sesionActual.TienePermiso(Permisos.ProductosEditar);
+        flowBotones.Controls.Add(_btnEditar);
+
+        var btnImeis = new Button { Text = "📱 IMEIs / Series", Size = new Size(125, 34), Margin = new Padding(0, 0, 6, 6) };
+        UITheme.AplicarBotonSecundario(btnImeis);
+        btnImeis.Click += (s, e) => AbrirGestionImeis();
+        flowBotones.Controls.Add(btnImeis);
+
+        _btnImprimirEtiqueta = new Button { Text = "🏷️ Imprimir Etiqueta", Size = new Size(145, 34), Margin = new Padding(0, 0, 6, 6) };
+        UITheme.AplicarBotonSecundario(_btnImprimirEtiqueta);
+        _btnImprimirEtiqueta.Click += (s, e) => AbrirImprimirEtiqueta();
+        flowBotones.Controls.Add(_btnImprimirEtiqueta);
+
+        var btnVerificador = new Button { Text = "📸 Lector", Size = new Size(85, 34), Margin = new Padding(0, 0, 6, 6) };
+        UITheme.AplicarBotonSecundario(btnVerificador);
+        btnVerificador.Click += (s, e) => AbrirVerificadorPrecio();
+        flowBotones.Controls.Add(btnVerificador);
+
+        _btnToggleEstado = new Button { Text = "🔄 Act/Desc", Size = new Size(95, 34), Margin = new Padding(0, 0, 6, 6) };
+        UITheme.AplicarBotonSecundario(_btnToggleEstado);
+        _btnToggleEstado.Click += async (s, e) => await ToggleEstadoProductoAsync();
+        _btnToggleEstado.Visible = _sesionActual.EsSuperAdmin || _sesionActual.EsAdmin || _sesionActual.TienePermiso(Permisos.ProductosDesactivar);
+        flowBotones.Controls.Add(_btnToggleEstado);
+
+        _btnCategorias = new Button { Text = "📁 Categorías", Size = new Size(115, 34), Margin = new Padding(0, 0, 6, 6) };
+        UITheme.AplicarBotonSecundario(_btnCategorias);
+        _btnCategorias.Click += async (s, e) => await AbrirCategoriasFormAsync();
+        _btnCategorias.Visible = _sesionActual.EsSuperAdmin || _sesionActual.EsAdmin || _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
+        flowBotones.Controls.Add(_btnCategorias);
+
+        // Fila 2: Filtros de Búsqueda
+        var flowFiltros = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Padding = new Padding(0, 4, 0, 4)
+        };
+
+        var lblBuscar = new Label { Text = "🔍 Buscar:", AutoSize = true, Font = UITheme.SectionFont, Margin = new Padding(0, 5, 4, 0) };
+        flowFiltros.Controls.Add(lblBuscar);
+
+        _txtBuscar = new TextBox { Size = new Size(160, 26), Font = new Font("Segoe UI", 9F), PlaceholderText = "Buscar o escanear...", Margin = new Padding(0, 2, 10, 0) };
         _txtBuscar.TextChanged += (s, e) => FiltrarGrid();
         BarcodeScannerHelper.ConfigurarParaEscaneo(_txtBuscar, async (codigo) =>
         {
@@ -100,68 +166,26 @@ public class ProductosForm : Form
             FiltrarGrid();
             await Task.CompletedTask;
         });
-        toolbar.Controls.Add(_txtBuscar);
+        flowFiltros.Controls.Add(_txtBuscar);
 
-        var lblCat = new Label { Text = "Categoría:", Location = new Point(325, 16), AutoSize = true, Font = UITheme.BodyFont };
-        toolbar.Controls.Add(lblCat);
+        var lblCat = new Label { Text = "Categoría:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(0, 5, 4, 0) };
+        flowFiltros.Controls.Add(lblCat);
 
-        _cbCategorias = new ComboBox { Location = new Point(390, 13), Size = new Size(140, 28), DropDownStyle = ComboBoxStyle.DropDownList };
+        _cbCategorias = new ComboBox { Size = new Size(170, 26), DropDownStyle = ComboBoxStyle.DropDownList, Margin = new Padding(0, 2, 10, 0) };
         _cbCategorias.SelectedIndexChanged += async (s, e) => await RecargarProductosAsync();
-        toolbar.Controls.Add(_cbCategorias);
+        flowFiltros.Controls.Add(_cbCategorias);
 
-        _chkBajoStock = new CheckBox { Text = "⚠️ Bajo stock", Location = new Point(535, 15), Checked = false, AutoSize = true, Font = UITheme.SectionFont, ForeColor = UITheme.Danger };
+        _chkBajoStock = new CheckBox { Text = "⚠️ Bajo stock", Checked = false, AutoSize = true, Font = UITheme.SectionFont, ForeColor = UITheme.Danger, Margin = new Padding(0, 4, 10, 0) };
         _chkBajoStock.CheckedChanged += (s, e) => FiltrarGrid();
-        toolbar.Controls.Add(_chkBajoStock);
+        flowFiltros.Controls.Add(_chkBajoStock);
 
-        _chkSoloActivos = new CheckBox { Text = "Activos", Location = new Point(645, 16), Checked = true, AutoSize = true };
+        _chkSoloActivos = new CheckBox { Text = "Solo activos", Checked = true, AutoSize = true, Margin = new Padding(0, 5, 0, 0) };
         _chkSoloActivos.CheckedChanged += async (s, e) => await RecargarProductosAsync();
-        toolbar.Controls.Add(_chkSoloActivos);
+        flowFiltros.Controls.Add(_chkSoloActivos);
 
-        // Panel Botones Derecha
-        var panelBotones = new FlowLayoutPanel
-        {
-            Dock = DockStyle.Right,
-            FlowDirection = FlowDirection.RightToLeft,
-            Width = 620,
-            Height = 50
-        };
-
-        _btnNuevo = new Button { Text = "➕ Nuevo", Size = new Size(90, 38) };
-        UITheme.AplicarBotonPrimario(_btnNuevo);
-        _btnNuevo.Click += async (s, e) => await AbrirCrearProductoAsync();
-        _btnNuevo.Visible = _sesionActual.TienePermiso(Permisos.ProductosCrear);
-        panelBotones.Controls.Add(_btnNuevo);
-
-        _btnImprimirEtiqueta = new Button { Text = "🏷️ Etiqueta", Size = new Size(95, 38) };
-        UITheme.AplicarBotonSecundario(_btnImprimirEtiqueta);
-        _btnImprimirEtiqueta.Click += (s, e) => AbrirImprimirEtiqueta();
-        panelBotones.Controls.Add(_btnImprimirEtiqueta);
-
-        var btnVerificador = new Button { Text = "📸 Lector", Size = new Size(85, 38) };
-        UITheme.AplicarBotonSecundario(btnVerificador);
-        btnVerificador.Click += (s, e) => AbrirVerificadorPrecio();
-        panelBotones.Controls.Add(btnVerificador);
-
-        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(80, 38) };
-        UITheme.AplicarBotonSecundario(_btnEditar);
-        _btnEditar.Click += async (s, e) => await AbrirEditarProductoAsync();
-        _btnEditar.Visible = _sesionActual.TienePermiso(Permisos.ProductosEditar);
-        panelBotones.Controls.Add(_btnEditar);
-
-        _btnToggleEstado = new Button { Text = "🔄 Act/Desc", Size = new Size(95, 38) };
-        UITheme.AplicarBotonSecundario(_btnToggleEstado);
-        _btnToggleEstado.Click += async (s, e) => await ToggleEstadoProductoAsync();
-        _btnToggleEstado.Visible = _sesionActual.TienePermiso(Permisos.ProductosDesactivar);
-        panelBotones.Controls.Add(_btnToggleEstado);
-
-        _btnCategorias = new Button { Text = "📁 Categorías", Size = new Size(100, 38) };
-        UITheme.AplicarBotonSecundario(_btnCategorias);
-        _btnCategorias.Click += async (s, e) => await AbrirCategoriasFormAsync();
-        _btnCategorias.Visible = _sesionActual.TienePermiso(Permisos.CategoriasGestionar);
-        panelBotones.Controls.Add(_btnCategorias);
-
-        toolbar.Controls.Add(panelBotones);
-        panelPrincipal.Controls.Add(toolbar);
+        // Agregar a toolbar en orden correcto: filtros abajo, botones arriba
+        toolbarContenedor.Controls.Add(flowFiltros);
+        toolbarContenedor.Controls.Add(flowBotones);
 
         // DataGridView
         var panelGrid = new Panel
@@ -176,7 +200,10 @@ public class ProductosForm : Form
         ConfigurarColumnasGrid();
         panelGrid.Controls.Add(_gridProductos);
 
+        // Agregar al panelPrincipal en orden de acoplamiento correcto
         panelPrincipal.Controls.Add(panelGrid);
+        panelPrincipal.Controls.Add(toolbarContenedor);
+        panelPrincipal.Controls.Add(header);
     }
 
     private void ConfigurarColumnasGrid()
@@ -184,14 +211,15 @@ public class ProductosForm : Form
         _gridProductos.Columns.Clear();
         _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Id", HeaderText = "ID", Visible = false });
         _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Sku", HeaderText = "SKU", FillWeight = 85 });
-        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Nombre", HeaderText = "Producto", FillWeight = 160 });
-        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Categoria", HeaderText = "Categoría", FillWeight = 100 });
-        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "PrecioCosto", HeaderText = "Costo", FillWeight = 80 });
-        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "PrecioVenta", HeaderText = "Venta", FillWeight = 80 });
-        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "StockActual", HeaderText = "Stock", FillWeight = 60 });
-        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "CantidadMinima", HeaderText = "Mín.", FillWeight = 50 });
-        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "CodigoBarras", HeaderText = "Cód. Barras", FillWeight = 95 });
-        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Estado", HeaderText = "Estado", FillWeight = 65 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Nombre", HeaderText = "Producto", FillWeight = 150 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Categoria", HeaderText = "Categoría", FillWeight = 95 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Tipo", HeaderText = "Rastreo", FillWeight = 65 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "PrecioCosto", HeaderText = "Costo", FillWeight = 75 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "PrecioVenta", HeaderText = "Venta", FillWeight = 75 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "StockActual", HeaderText = "Stock", FillWeight = 55 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "CantidadMinima", HeaderText = "Mín.", FillWeight = 45 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "CodigoBarras", HeaderText = "Cód. Barras", FillWeight = 90 });
+        _gridProductos.Columns.Add(new DataGridViewTextBoxColumn { Name = "Estado", HeaderText = "Estado", FillWeight = 60 });
     }
 
     private async Task CargarComboCategoriasAsync()
@@ -217,7 +245,7 @@ public class ProductosForm : Form
         }
 
         _listaProductos = await _productoService.ObtenerProductosAsync(
-            soloActivos: !_chkSoloActivos.Checked,
+            soloActivos: _chkSoloActivos.Checked,
             categoriaId: catId
         );
 
@@ -252,7 +280,7 @@ public class ProductosForm : Form
              p.Nombre.ToLower().Contains(q) ||
              p.Sku.ToLower().Contains(q) ||
              (p.CodigoBarras != null && p.CodigoBarras.ToLower().Contains(q)) ||
-             p.Categoria.Nombre.ToLower().Contains(q)) &&
+             (p.Categoria != null && p.Categoria.Nombre.ToLower().Contains(q))) &&
             (!soloBajo || (p.Activo && p.StockActual <= p.CantidadMinima))
         ).ToList();
 
@@ -263,7 +291,8 @@ public class ProductosForm : Form
                 p.Id,
                 p.Sku,
                 p.Nombre,
-                p.Categoria.Nombre,
+                p.Categoria?.Nombre ?? "-",
+                p.RequiereSerie ? "📱 Celular/IMEI" : "📦 Cantidad",
                 AppCulture.FormatearMoneda(p.PrecioCosto),
                 AppCulture.FormatearMoneda(p.PrecioVenta),
                 p.StockActual,
@@ -277,6 +306,11 @@ public class ProductosForm : Form
             {
                 row.DefaultCellStyle.ForeColor = UITheme.TextMuted;
             }
+            else if (p.RequiereSerie)
+            {
+                row.Cells["Tipo"].Style.ForeColor = Color.FromArgb(26, 35, 126);
+                row.Cells["Tipo"].Style.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            }
 
             // Resaltar alerta de stock bajo
             if (p.Activo && p.StockActual <= p.CantidadMinima)
@@ -285,6 +319,26 @@ public class ProductosForm : Form
                 row.Cells["StockActual"].Style.Font = UITheme.SectionFont;
             }
         }
+    }
+
+    private void AbrirGestionImeis()
+    {
+        var prod = ObtenerProductoSeleccionado();
+        if (prod == null)
+        {
+            MessageBox.Show("Por favor seleccione un producto del catálogo.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (!prod.RequiereSerie)
+        {
+            var r = MessageBox.Show($"El producto '{prod.Nombre}' no está marcado como celular con serie/IMEI (se controla por cantidad normal).\n¿Desea abrir el control de unidades de todos modos?", "Aviso", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (r != DialogResult.Yes) return;
+        }
+
+        using var modal = new GestionarImeisModalForm(_productoService, prod);
+        modal.ShowDialog(this);
+        _ = RecargarProductosAsync();
     }
 
     private Producto? ObtenerProductoSeleccionado()

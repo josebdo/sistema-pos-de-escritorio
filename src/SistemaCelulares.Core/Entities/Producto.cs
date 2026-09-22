@@ -30,10 +30,17 @@ public class Producto
     public string? CodigoBarras { get; set; }
 
     /// <summary>
+    /// Indica si el producto requiere rastreo individual por IMEI / Serie (true para celulares, false para accesorios/papelería).
+    /// </summary>
+    public bool RequiereSerie { get; set; } = false;
+
+    /// <summary>
     /// Eliminación lógica: no se borra físicamente para preservar trazabilidad de ventas y compras.
     /// </summary>
     public bool Activo { get; set; } = true;
 
     public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
     public DateTime? UltimaModificacion { get; set; }
+
+    public virtual ICollection<UnidadProducto> Unidades { get; set; } = new List<UnidadProducto>();
 }

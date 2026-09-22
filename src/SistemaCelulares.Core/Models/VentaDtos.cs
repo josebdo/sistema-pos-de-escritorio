@@ -16,6 +16,9 @@ public class ItemCarritoVentaDto
     public decimal SubtotalSinItbis => AplicaItbis ? (PrecioUnitario * Cantidad - Itbis) : (PrecioUnitario * Cantidad);
     public decimal TotalBruto => PrecioUnitario * Cantidad;
     public int StockDisponible { get; set; }
+    public bool RequiereSerie { get; set; } = false;
+    public int? UnidadProductoId { get; set; }
+    public string? Imei { get; set; }
 }
 
 public class RegistrarVentaRequestDto

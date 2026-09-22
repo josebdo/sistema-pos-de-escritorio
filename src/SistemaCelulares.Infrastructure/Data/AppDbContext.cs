@@ -23,6 +23,9 @@ public class AppDbContext : DbContext
     public DbSet<ComprobanteFiscalSecuencia> ComprobanteFiscalSecuencias => Set<ComprobanteFiscalSecuencia>();
     public DbSet<Venta> Ventas => Set<Venta>();
     public DbSet<DetalleVenta> DetalleVentas => Set<DetalleVenta>();
+    public DbSet<UnidadProducto> UnidadesProducto => Set<UnidadProducto>();
+    public DbSet<OrdenReparacion> OrdenesReparacion => Set<OrdenReparacion>();
+    public DbSet<ConfiguracionNegocio> ConfiguracionesNegocio => Set<ConfiguracionNegocio>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -357,6 +360,90 @@ public class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(dv => dv.ProductoId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(dv => dv.UnidadProducto)
+                  .WithMany()
+                  .HasForeignKey(dv => dv.UnidadProductoId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configuración de UnidadProducto (IMEIs)
+        modelBuilder.Entity<UnidadProducto>(entity =>
+        {
+            entity.ToTable("UnidadesProducto");
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Imei).IsRequired().HasMaxLength(50);
+            entity.HasIndex(u => u.Imei).IsUnique();
+            entity.Property(u => u.Notas).HasMaxLength(300);
+
+            entity.HasOne(u => u.Producto)
+                  .WithMany(p => p.Unidades)
+                  .HasForeignKey(u => u.ProductoId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(u => u.Venta)
+                  .WithMany()
+                  .HasForeignKey(u => u.VentaId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(u => u.Estado);
+        });
+
+        // Configuración de OrdenReparacion (Taller de celulares)
+        modelBuilder.Entity<OrdenReparacion>(entity =>
+        {
+            entity.ToTable("OrdenesReparacion");
+            entity.HasKey(o => o.Id);
+            entity.Property(o => o.NumeroOrden).IsRequired().HasMaxLength(50);
+            entity.HasIndex(o => o.NumeroOrden).IsUnique();
+            entity.Property(o => o.Marca).IsRequired().HasMaxLength(80);
+            entity.Property(o => o.Modelo).IsRequired().HasMaxLength(80);
+            entity.Property(o => o.ImeiOSerie).HasMaxLength(60);
+            entity.Property(o => o.DescripcionProblema).IsRequired().HasMaxLength(500);
+            entity.Property(o => o.NotasDiagnostico).HasMaxLength(500);
+            entity.Property(o => o.PrecioEstimado).HasPrecision(18, 2);
+            entity.Property(o => o.PrecioFinal).HasPrecision(18, 2);
+
+            entity.HasOne(o => o.Cliente)
+                  .WithMany(c => c.Reparaciones)
+                  .HasForeignKey(o => o.ClienteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(o => o.Pago)
+                  .WithMany()
+                  .HasForeignKey(o => o.PagoId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(o => o.UsuarioRecepcion)
+                  .WithMany()
+                  .HasForeignKey(o => o.UsuarioRecepcionId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(o => o.UsuarioEntrega)
+                  .WithMany()
+                  .HasForeignKey(o => o.UsuarioEntregaId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(o => o.Estado);
+            entity.HasIndex(o => o.FechaRecepcion);
+        });
+
+        // Configuración de ConfiguracionNegocio
+        modelBuilder.Entity<ConfiguracionNegocio>(entity =>
+        {
+            entity.ToTable("ConfiguracionesNegocio");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.NombreEmpresa).IsRequired().HasMaxLength(150);
+            entity.Property(c => c.RncCedula).IsRequired().HasMaxLength(30);
+            entity.Property(c => c.Telefono).HasMaxLength(30);
+            entity.Property(c => c.WhatsApp).HasMaxLength(30);
+            entity.Property(c => c.Email).HasMaxLength(100);
+            entity.Property(c => c.Direccion).HasMaxLength(250);
+            entity.Property(c => c.Ciudad).HasMaxLength(100);
+            entity.Property(c => c.MensajePieFactura).HasMaxLength(500);
+            entity.Property(c => c.MensajeGarantiaReparacion).HasMaxLength(500);
+            entity.Property(c => c.MonedaSimbolo).HasMaxLength(10);
+            entity.Property(c => c.ItbisPorcentaje).HasPrecision(5, 2);
         });
     }
 }

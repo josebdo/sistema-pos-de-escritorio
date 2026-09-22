@@ -38,7 +38,7 @@ public class RegistrarMovimientoModalForm : Form
     {
         Text = "Registrar Movimiento Financiero";
         Size = new Size(520, 560);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

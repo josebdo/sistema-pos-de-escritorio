@@ -13,19 +13,29 @@ public class PuntoVentaForm : Form
     private readonly IProductoService _productoService;
     private readonly IPagoService _pagoService;
     private readonly ITurnoService _turnoService;
+    private readonly IClienteService _clienteService;
     private readonly SesionUsuario _sesion;
     private readonly IServiceProvider _serviceProvider;
 
     private Turno? _turnoActivo;
     private readonly List<ItemCarritoVentaDto> _carrito = new();
+    private Cliente? _clienteSeleccionado;
+
+    public Action? OnSalirPos { get; set; }
 
     // Controles
     private Label _lblTurnoInfo = null!;
     private ComboBox _cmbTipoComprobante = null!;
+    private ComboBox _cmbClientes = null!;
+    private Button _btnNuevoCliente = null!;
     private TextBox _txtClienteNombre = null!;
     private TextBox _txtClienteRnc = null!;
     private TextBox _txtBusquedaProducto = null!;
     private DataGridView _gridCarrito = null!;
+
+    private Panel _pnlSugerencias = null!;
+    private ListBox _lstSugerencias = null!;
+    private List<Producto> _catalogoProductos = new();
 
     private Label _lblSubtotal = null!;
     private Label _lblItbis = null!;
@@ -35,11 +45,22 @@ public class PuntoVentaForm : Form
     private Button _btnLimpiar = null!;
     private Button _btnHistorial = null!;
 
+    private class SugerenciaProductoItem
+    {
+        public Producto Producto { get; set; } = null!;
+        public override string ToString()
+        {
+            string stockStr = Producto.StockActual > 0 ? $"Stock: {Producto.StockActual}" : "AGOTADO";
+            return $"📦 {Producto.Nombre}  |  RD$ {Producto.PrecioVenta:N2}  |  {stockStr}  ({Producto.Sku})";
+        }
+    }
+
     public PuntoVentaForm(
         IVentaService ventaService,
         IProductoService productoService,
         IPagoService pagoService,
         ITurnoService turnoService,
+        IClienteService clienteService,
         SesionUsuario sesion,
         IServiceProvider serviceProvider)
     {
@@ -47,11 +68,14 @@ public class PuntoVentaForm : Form
         _productoService = productoService;
         _pagoService = pagoService;
         _turnoService = turnoService;
+        _clienteService = clienteService;
         _sesion = sesion;
         _serviceProvider = serviceProvider;
 
         InitializeComponents();
         CargarTurnoActivo();
+        _ = CargarComboClientesAsync();
+        _ = CargarCatalogoProductosAsync();
     }
 
     private void InitializeComponents()
@@ -69,22 +93,65 @@ public class PuntoVentaForm : Form
             if (e.KeyCode == Keys.F6) _btnHistorial.PerformClick();
         };
 
+        // Contenedor Principal
+        var pnlPrincipal = new Panel
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(15),
+            BackColor = UITheme.AppBg
+        };
+
         // Header Superior
         var pnlHeader = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 65,
+            Height = 52,
             BackColor = Color.FromArgb(24, 43, 73),
-            Padding = new Padding(20, 10, 20, 10)
+            Padding = new Padding(15, 8, 15, 8)
         };
 
         var lblTitulo = new Label
         {
-            Text = "🛒 PUNTO DE VENTA Y FACTURACIÓN COMERCIAL",
+            Text = "🛒 PUNTO DE VENTA (POS) Y FACTURACIÓN COMERCIAL",
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 12, FontStyle.Bold),
+            Font = new Font("Segoe UI", 11, FontStyle.Bold),
             Dock = DockStyle.Left,
-            AutoSize = true
+            AutoSize = true,
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+
+        var btnSalir = new Button
+        {
+            Text = "🚪 Salir del POS",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            ForeColor = Color.White,
+            BackColor = Color.FromArgb(220, 53, 69),
+            FlatStyle = FlatStyle.Flat,
+            Size = new Size(130, 34),
+            Cursor = Cursors.Hand,
+            Dock = DockStyle.Right,
+            Margin = new Padding(15, 0, 0, 0)
+        };
+        btnSalir.FlatAppearance.BorderSize = 0;
+        btnSalir.Click += (s, e) => OnSalirPos?.Invoke();
+
+        var btnHistorial = new Button
+        {
+            Text = "📜 Historial / Anular (F6)",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            ForeColor = Color.White,
+            BackColor = Color.FromArgb(44, 62, 80),
+            FlatStyle = FlatStyle.Flat,
+            Size = new Size(185, 34),
+            Cursor = Cursors.Hand,
+            Dock = DockStyle.Right,
+            Margin = new Padding(0, 0, 10, 0)
+        };
+        btnHistorial.FlatAppearance.BorderSize = 0;
+        btnHistorial.Click += (s, e) =>
+        {
+            using var dlg = new HistorialVentasForm(_ventaService, _sesion);
+            dlg.ShowDialog(this);
         };
 
         _lblTurnoInfo = new Label
@@ -93,29 +160,202 @@ public class PuntoVentaForm : Form
             ForeColor = Color.FromArgb(46, 204, 113),
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
             Dock = DockStyle.Right,
-            AutoSize = true
+            AutoSize = true,
+            TextAlign = ContentAlignment.MiddleRight,
+            Padding = new Padding(0, 7, 15, 0)
         };
 
+        // Dock right controls: added in reverse order in WinForms Dock
         pnlHeader.Controls.Add(lblTitulo);
         pnlHeader.Controls.Add(_lblTurnoInfo);
+        pnlHeader.Controls.Add(btnHistorial);
+        pnlHeader.Controls.Add(btnSalir);
 
-        // Panel de Opciones Fiscales y Cliente (Top)
-        var pnlFiscal = new Panel
+        // Panel Central
+        var pnlCentro = new Panel
         {
-            Location = new Point(20, 75),
-            Size = new Size(740, 75),
-            BackColor = Color.White,
-            BorderStyle = BorderStyle.FixedSingle,
-            Padding = new Padding(10)
+            Dock = DockStyle.Fill,
+            Padding = new Padding(0, 10, 0, 0)
         };
 
-        var lblTipoComp = new Label { Text = "Comprobante Fiscal:", Location = new Point(10, 10), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+        // Panel Lateral Derecho: Totales y Cobro
+        var pnlTotales = new Panel
+        {
+            Dock = DockStyle.Right,
+            Width = 320,
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle,
+            Padding = new Padding(15),
+            AutoScroll = true
+        };
+
+        var lblResumenTitulo = new Label
+        {
+            Text = "RESUMEN DE VENTA",
+            Font = new Font("Segoe UI", 11, FontStyle.Bold),
+            ForeColor = Color.FromArgb(52, 73, 94),
+            Dock = DockStyle.Top,
+            Height = 25
+        };
+
+        var pnlTotalGrande = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 85,
+            BackColor = Color.FromArgb(24, 43, 73),
+            Padding = new Padding(10),
+            Margin = new Padding(0, 0, 0, 10)
+        };
+
+        var lblTotalTxt = new Label
+        {
+            Text = "TOTAL A PAGAR (RD$)",
+            ForeColor = Color.FromArgb(173, 181, 189),
+            Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+            Dock = DockStyle.Top
+        };
+
+        _lblTotal = new Label
+        {
+            Text = "RD$ 0.00",
+            ForeColor = Color.FromArgb(46, 204, 113),
+            Font = new Font("Segoe UI", 20, FontStyle.Bold),
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleCenter
+        };
+
+        pnlTotalGrande.Controls.Add(_lblTotal);
+        pnlTotalGrande.Controls.Add(lblTotalTxt);
+
+        var pnlDesglose = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 110,
+            Padding = new Padding(0, 8, 0, 0)
+        };
+
+        var lblSubtxt = new Label { Text = "Subtotal:", Location = new Point(5, 8), AutoSize = true, Font = UITheme.BodyFont };
+        _lblSubtotal = new Label { Text = "RD$ 0.00", Location = new Point(140, 8), Size = new Size(140, 20), TextAlign = ContentAlignment.MiddleRight, Font = UITheme.SectionFont };
+
+        var lblItbistxt = new Label { Text = "ITBIS (18%):", Location = new Point(5, 36), AutoSize = true, Font = UITheme.BodyFont };
+        _lblItbis = new Label { Text = "RD$ 0.00", Location = new Point(140, 36), Size = new Size(140, 20), TextAlign = ContentAlignment.MiddleRight, Font = UITheme.SectionFont };
+
+        var lblDesctxt = new Label { Text = "Descuento:", Location = new Point(5, 68), AutoSize = true, Font = UITheme.BodyFont };
+        _numDescuento = new NumericUpDown { Location = new Point(150, 66), Size = new Size(130, 26), Maximum = 100000, DecimalPlaces = 2 };
+        _numDescuento.ValueChanged += (s, e) => RecalcularTotales();
+
+        pnlDesglose.Controls.Add(lblSubtxt);
+        pnlDesglose.Controls.Add(_lblSubtotal);
+        pnlDesglose.Controls.Add(lblItbistxt);
+        pnlDesglose.Controls.Add(_lblItbis);
+        pnlDesglose.Controls.Add(lblDesctxt);
+        pnlDesglose.Controls.Add(_numDescuento);
+
+        // Botones de Cobro
+        var pnlBotonesCobro = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 160,
+            Padding = new Padding(0, 10, 0, 0)
+        };
+
+        _btnCobrar = new Button
+        {
+            Text = "💳 COBRAR Y FACTURAR (F12)",
+            Dock = DockStyle.Top,
+            Height = 52,
+            BackColor = Color.FromArgb(39, 174, 96),
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI", 11, FontStyle.Bold),
+            Cursor = Cursors.Hand
+        };
+        _btnCobrar.FlatAppearance.BorderSize = 0;
+        _btnCobrar.Click += async (s, e) => await ProcesarCobroVentaAsync();
+
+        var spacerBtn = new Panel { Dock = DockStyle.Top, Height = 8 };
+
+        _btnLimpiar = new Button
+        {
+            Text = "🗑️ Limpiar Carrito (F4)",
+            Dock = DockStyle.Top,
+            Height = 36,
+            BackColor = Color.FromArgb(231, 76, 60),
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Font = UITheme.SectionFont,
+            Cursor = Cursors.Hand
+        };
+        _btnLimpiar.FlatAppearance.BorderSize = 0;
+        _btnLimpiar.Click += (s, e) =>
+        {
+            _carrito.Clear();
+            RefrescarGridCarrito();
+        };
+
+        var spacerBtn2 = new Panel { Dock = DockStyle.Top, Height = 8 };
+
+        _btnHistorial = new Button
+        {
+            Text = "📜 Historial de Ventas (F6)",
+            Dock = DockStyle.Top,
+            Height = 36,
+            BackColor = Color.FromArgb(52, 152, 219),
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Font = UITheme.SectionFont,
+            Cursor = Cursors.Hand
+        };
+        _btnHistorial.FlatAppearance.BorderSize = 0;
+        _btnHistorial.Click += (s, e) =>
+        {
+            var f = new HistorialVentasForm(_ventaService, _sesion);
+            f.ShowDialog(this);
+        };
+
+        pnlBotonesCobro.Controls.Add(_btnHistorial);
+        pnlBotonesCobro.Controls.Add(spacerBtn2);
+        pnlBotonesCobro.Controls.Add(_btnLimpiar);
+        pnlBotonesCobro.Controls.Add(spacerBtn);
+        pnlBotonesCobro.Controls.Add(_btnCobrar);
+
+        pnlTotales.Controls.Add(pnlBotonesCobro);
+        pnlTotales.Controls.Add(pnlDesglose);
+        pnlTotales.Controls.Add(pnlTotalGrande);
+        pnlTotales.Controls.Add(lblResumenTitulo);
+
+        // Panel Izquierdo: Datos fiscales, escáner y Carrito
+        var pnlIzquierdo = new Panel
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(0, 0, 10, 0)
+        };
+
+        // Panel de Opciones Fiscales y Cliente (Top)
+        var pnlFiscal = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            Height = 66,
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle,
+            Padding = new Padding(8, 6, 8, 6),
+            ColumnCount = 4,
+            RowCount = 2
+        };
+        pnlFiscal.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
+        pnlFiscal.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35f));
+        pnlFiscal.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 22f));
+        pnlFiscal.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18f));
+        pnlFiscal.RowStyles.Add(new RowStyle(SizeType.Absolute, 18f));
+        pnlFiscal.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+
+        var lblTipoComp = new Label { Text = "Comprobante Fiscal:", AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = UITheme.TextSecondary };
         _cmbTipoComprobante = new ComboBox
         {
-            Location = new Point(10, 32),
-            Size = new Size(230, 25),
+            Dock = DockStyle.Fill,
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Font = new Font("Segoe UI", 8.5f)
+            Font = new Font("Segoe UI", 9f),
+            Margin = new Padding(0, 2, 6, 0)
         };
         _cmbTipoComprobante.Items.AddRange(new object[]
         {
@@ -132,43 +372,89 @@ public class PuntoVentaForm : Form
             _txtClienteRnc.BackColor = esB01 ? Color.FromArgb(254, 249, 231) : Color.White;
         };
 
-        var lblCliente = new Label { Text = "Cliente / Razón Social:", Location = new Point(255, 10), AutoSize = true, Font = new Font("Segoe UI", 8.5f) };
-        _txtClienteNombre = new TextBox { Location = new Point(255, 32), Size = new Size(240, 25), Font = new Font("Segoe UI", 8.5f), PlaceholderText = "Consumidor Final" };
+        var lblCliente = new Label { Text = "Cliente Registrado:", AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = UITheme.TextSecondary };
+        var pnlComboCliente = new Panel { Dock = DockStyle.Fill, Margin = new Padding(0, 2, 6, 0) };
+        _btnNuevoCliente = new Button
+        {
+            Text = "➕",
+            Dock = DockStyle.Right,
+            Width = 32,
+            BackColor = Color.FromArgb(26, 35, 126),
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+            Cursor = Cursors.Hand
+        };
+        _btnNuevoCliente.FlatAppearance.BorderSize = 0;
+        _btnNuevoCliente.Click += async (s, e) => await RegistrarNuevoClienteRapidoAsync();
 
-        var lblRnc = new Label { Text = "RNC / Cédula (obligatorio para B01):", Location = new Point(510, 10), AutoSize = true, Font = new Font("Segoe UI", 8.5f) };
-        _txtClienteRnc = new TextBox { Location = new Point(510, 32), Size = new Size(210, 25), Font = new Font("Segoe UI", 8.5f), PlaceholderText = "Ej: 131-12345-6" };
+        _cmbClientes = new ComboBox
+        {
+            Dock = DockStyle.Fill,
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Font = new Font("Segoe UI", 9f)
+        };
+        _cmbClientes.SelectedIndexChanged += (s, e) => SeleccionarClienteDeCombo();
 
-        pnlFiscal.Controls.Add(lblTipoComp);
-        pnlFiscal.Controls.Add(_cmbTipoComprobante);
-        pnlFiscal.Controls.Add(lblCliente);
-        pnlFiscal.Controls.Add(_txtClienteNombre);
-        pnlFiscal.Controls.Add(lblRnc);
-        pnlFiscal.Controls.Add(_txtClienteRnc);
+        pnlComboCliente.Controls.Add(_cmbClientes);
+        pnlComboCliente.Controls.Add(_btnNuevoCliente);
+
+        var lblCliLibre = new Label { Text = "Nombre Cliente / Razón:", AutoSize = true, Font = new Font("Segoe UI", 8.5f), ForeColor = UITheme.TextSecondary };
+        _txtClienteNombre = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 9f), PlaceholderText = "Consumidor Final", Margin = new Padding(0, 2, 6, 0) };
+
+        var lblRnc = new Label { Text = "RNC / Cédula (B01):", AutoSize = true, Font = new Font("Segoe UI", 8.5f), ForeColor = UITheme.TextSecondary };
+        _txtClienteRnc = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 9f), PlaceholderText = "131-12345-6", Margin = new Padding(0, 2, 0, 0) };
+
+        pnlFiscal.Controls.Add(lblTipoComp, 0, 0);
+        pnlFiscal.Controls.Add(_cmbTipoComprobante, 0, 1);
+        pnlFiscal.Controls.Add(lblCliente, 1, 0);
+        pnlFiscal.Controls.Add(pnlComboCliente, 1, 1);
+        pnlFiscal.Controls.Add(lblCliLibre, 2, 0);
+        pnlFiscal.Controls.Add(_txtClienteNombre, 2, 1);
+        pnlFiscal.Controls.Add(lblRnc, 3, 0);
+        pnlFiscal.Controls.Add(_txtClienteRnc, 3, 1);
+
+        var spacerFiscal = new Panel { Dock = DockStyle.Top, Height = 8 };
 
         // Barra de Búsqueda y Escáner (Center-Top)
         var pnlBusqueda = new Panel
         {
-            Location = new Point(20, 160),
-            Size = new Size(740, 50),
+            Dock = DockStyle.Top,
+            Height = 44,
             BackColor = Color.FromArgb(234, 250, 234),
             BorderStyle = BorderStyle.FixedSingle,
-            Padding = new Padding(10)
+            Padding = new Padding(8, 6, 8, 6)
         };
 
         var lblScan = new Label
         {
-            Text = "🔍 Escanear Código de Barras / SKU / Nombre:",
-            Location = new Point(10, 14),
+            Text = "🔍 Escanear / SKU:",
+            Dock = DockStyle.Left,
             AutoSize = true,
             Font = new Font("Segoe UI", 9, FontStyle.Bold),
-            ForeColor = Color.FromArgb(30, 132, 73)
+            ForeColor = Color.FromArgb(30, 132, 73),
+            Padding = new Padding(0, 6, 8, 0)
         };
+
+        var btnBuscar = new Button
+        {
+            Text = "➕ Agregar",
+            Dock = DockStyle.Right,
+            Width = 95,
+            BackColor = Color.FromArgb(39, 174, 96),
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+            Cursor = Cursors.Hand
+        };
+        btnBuscar.FlatAppearance.BorderSize = 0;
+        btnBuscar.Click += async (s, e) => await BuscarYAgregarProductoAsync(_txtBusquedaProducto.Text.Trim());
 
         _txtBusquedaProducto = new TextBox
         {
-            Location = new Point(310, 11),
-            Size = new Size(310, 26),
-            Font = new Font("Segoe UI", 10)
+            Dock = DockStyle.Fill,
+            Font = new Font("Segoe UI", 9.5f),
+            PlaceholderText = "Escanear código de barras o escribir SKU / nombre..."
         };
         _txtBusquedaProducto.KeyDown += async (s, e) =>
         {
@@ -179,40 +465,143 @@ public class PuntoVentaForm : Form
             }
         };
 
-        var btnBuscar = new Button
-        {
-            Text = "Agregar",
-            Location = new Point(630, 9),
-            Size = new Size(90, 29),
-            BackColor = Color.FromArgb(39, 174, 96),
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-            Cursor = Cursors.Hand
-        };
-        btnBuscar.FlatAppearance.BorderSize = 0;
-        btnBuscar.Click += async (s, e) => await BuscarYAgregarProductoAsync(_txtBusquedaProducto.Text.Trim());
-
-        pnlBusqueda.Controls.Add(lblScan);
         pnlBusqueda.Controls.Add(_txtBusquedaProducto);
+        pnlBusqueda.Controls.Add(lblScan);
         pnlBusqueda.Controls.Add(btnBuscar);
 
-        // Grid Carrito de Venta
-        _gridCarrito = new DataGridView
+        var spacerBusqueda = new Panel { Dock = DockStyle.Top, Height = 8 };
+
+        // Panel Flotante de Sugerencias Autocomplete
+        _pnlSugerencias = new Panel
         {
-            Location = new Point(20, 220),
-            Size = new Size(740, 440),
-            BackgroundColor = Color.White,
-            BorderStyle = BorderStyle.Fixed3D,
-            AllowUserToAddRows = false,
-            AllowUserToDeleteRows = false,
-            ReadOnly = false,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            RowHeadersVisible = false,
-            Font = new Font("Segoe UI", 9)
+            Visible = false,
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle,
+            Padding = new Padding(2),
+            Size = new Size(480, 180)
         };
 
+        _lstSugerencias = new ListBox
+        {
+            Dock = DockStyle.Fill,
+            BorderStyle = BorderStyle.None,
+            Font = new Font("Segoe UI", 9.5f),
+            ItemHeight = 26,
+            IntegralHeight = false,
+            Cursor = Cursors.Hand
+        };
+        _pnlSugerencias.Controls.Add(_lstSugerencias);
+
+        // Eventos de Búsqueda y Sugerencias en Vivo
+        _txtBusquedaProducto.TextChanged += (s, e) =>
+        {
+            string query = _txtBusquedaProducto.Text.Trim();
+            if (query.Length < 1)
+            {
+                _pnlSugerencias.Visible = false;
+                return;
+            }
+
+            var coincidencias = _catalogoProductos
+                .Where(p => p.Nombre.Contains(query, StringComparison.OrdinalIgnoreCase)
+                         || p.Sku.Contains(query, StringComparison.OrdinalIgnoreCase)
+                         || (p.CodigoBarras != null && p.CodigoBarras.Contains(query, StringComparison.OrdinalIgnoreCase))
+                         || (p.Categoria != null && p.Categoria.Nombre.Contains(query, StringComparison.OrdinalIgnoreCase)))
+                .Take(10)
+                .ToList();
+
+            if (coincidencias.Count == 0)
+            {
+                _pnlSugerencias.Visible = false;
+                return;
+            }
+
+            _lstSugerencias.BeginUpdate();
+            _lstSugerencias.Items.Clear();
+            foreach (var prod in coincidencias)
+            {
+                _lstSugerencias.Items.Add(new SugerenciaProductoItem { Producto = prod });
+            }
+            _lstSugerencias.SelectedIndex = 0;
+            _lstSugerencias.EndUpdate();
+
+            int altura = Math.Min(220, _lstSugerencias.Items.Count * 28 + 8);
+            _pnlSugerencias.Size = new Size(Math.Max(380, _txtBusquedaProducto.Width + 20), altura);
+            _pnlSugerencias.Location = new Point(pnlBusqueda.Left + 130, pnlBusqueda.Bottom + 2);
+            _pnlSugerencias.Visible = true;
+            _pnlSugerencias.BringToFront();
+        };
+
+        _txtBusquedaProducto.KeyDown += async (s, e) =>
+        {
+            if (e.KeyCode == Keys.Down)
+            {
+                if (_pnlSugerencias.Visible && _lstSugerencias.Items.Count > 0)
+                {
+                    int next = _lstSugerencias.SelectedIndex + 1;
+                    if (next < _lstSugerencias.Items.Count) _lstSugerencias.SelectedIndex = next;
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                }
+            }
+            else if (e.KeyCode == Keys.Up)
+            {
+                if (_pnlSugerencias.Visible && _lstSugerencias.Items.Count > 0)
+                {
+                    int prev = _lstSugerencias.SelectedIndex - 1;
+                    if (prev >= 0) _lstSugerencias.SelectedIndex = prev;
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                }
+            }
+            else if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                if (_pnlSugerencias.Visible && _lstSugerencias.SelectedItem is SugerenciaProductoItem selItem)
+                {
+                    _pnlSugerencias.Visible = false;
+                    _txtBusquedaProducto.Clear();
+                    await AgregarProductoAlCarritoAsync(selItem.Producto);
+                }
+                else
+                {
+                    _pnlSugerencias.Visible = false;
+                    await BuscarYAgregarProductoAsync(_txtBusquedaProducto.Text.Trim());
+                }
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                _pnlSugerencias.Visible = false;
+            }
+        };
+
+        _lstSugerencias.Click += async (s, e) =>
+        {
+            if (_lstSugerencias.SelectedItem is SugerenciaProductoItem selItem)
+            {
+                _pnlSugerencias.Visible = false;
+                _txtBusquedaProducto.Clear();
+                await AgregarProductoAlCarritoAsync(selItem.Producto);
+                _txtBusquedaProducto.Focus();
+            }
+        };
+
+        // Grid Carrito de Venta
+        var pnlGridCard = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.White,
+            Padding = new Padding(1)
+        };
+
+        _gridCarrito = new DataGridView
+        {
+            Dock = DockStyle.Fill,
+            AllowUserToAddRows = false,
+            AllowUserToDeleteRows = false,
+            ReadOnly = false
+        };
+        UITheme.EstilizarDataGridView(_gridCarrito);
         ConfigurarColumnasGrid();
         _gridCarrito.CellValueChanged += (s, e) => RecalcularTotales();
         _gridCarrito.CellContentClick += (s, e) =>
@@ -223,150 +612,33 @@ public class PuntoVentaForm : Form
                 RefrescarGridCarrito();
             }
         };
+        pnlGridCard.Controls.Add(_gridCarrito);
 
-        // Panel Lateral Derecho de Totales y Liquidación
-        var pnlTotales = new Panel
-        {
-            Location = new Point(775, 75),
-            Size = new Size(340, 585),
-            BackColor = Color.White,
-            BorderStyle = BorderStyle.FixedSingle,
-            Padding = new Padding(20)
-        };
+        pnlIzquierdo.Controls.Add(_pnlSugerencias);
+        pnlIzquierdo.Controls.Add(pnlGridCard);
+        pnlIzquierdo.Controls.Add(spacerBusqueda);
+        pnlIzquierdo.Controls.Add(pnlBusqueda);
+        pnlIzquierdo.Controls.Add(spacerFiscal);
+        pnlIzquierdo.Controls.Add(pnlFiscal);
 
-        var lblResumenTitulo = new Label
-        {
-            Text = "RESUMEN DE VENTA",
-            Font = new Font("Segoe UI", 11, FontStyle.Bold),
-            ForeColor = Color.FromArgb(52, 73, 94),
-            Location = new Point(20, 15),
-            AutoSize = true
-        };
+        pnlCentro.Controls.Add(pnlIzquierdo);
+        pnlCentro.Controls.Add(pnlTotales);
 
-        var pnlTotalGrande = new Panel
-        {
-            Location = new Point(15, 45),
-            Size = new Size(305, 110),
-            BackColor = Color.FromArgb(24, 43, 73),
-            Padding = new Padding(10)
-        };
-
-        var lblTotalTxt = new Label
-        {
-            Text = "TOTAL A PAGAR (RD$)",
-            ForeColor = Color.FromArgb(173, 181, 189),
-            Font = new Font("Segoe UI", 9, FontStyle.Bold),
-            Dock = DockStyle.Top
-        };
-
-        _lblTotal = new Label
-        {
-            Text = "RD$ 0.00",
-            ForeColor = Color.FromArgb(46, 204, 113),
-            Font = new Font("Segoe UI", 24, FontStyle.Bold),
-            Dock = DockStyle.Fill
-        };
-
-        pnlTotalGrande.Controls.Add(_lblTotal);
-        pnlTotalGrande.Controls.Add(lblTotalTxt);
-
-        // Desglose
-        int yTotales = 170;
-        var lblSubtxt = new Label { Text = "Subtotal Neto:", Location = new Point(20, yTotales), AutoSize = true, Font = new Font("Segoe UI", 9.5f) };
-        _lblSubtotal = new Label { Text = "RD$ 0.00", Location = new Point(180, yTotales), Size = new Size(140, 20), TextAlign = ContentAlignment.MiddleRight, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) };
-        yTotales += 30;
-
-        var lblItbistxt = new Label { Text = "ITBIS (18%):", Location = new Point(20, yTotales), AutoSize = true, Font = new Font("Segoe UI", 9.5f) };
-        _lblItbis = new Label { Text = "RD$ 0.00", Location = new Point(180, yTotales), Size = new Size(140, 20), TextAlign = ContentAlignment.MiddleRight, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) };
-        yTotales += 30;
-
-        var lblDesctxt = new Label { Text = "Descuento (RD$):", Location = new Point(20, yTotales + 3), AutoSize = true, Font = new Font("Segoe UI", 9.5f) };
-        _numDescuento = new NumericUpDown { Location = new Point(180, yTotales), Size = new Size(140, 25), Maximum = 100000, DecimalPlaces = 2 };
-        _numDescuento.ValueChanged += (s, e) => RecalcularTotales();
-        yTotales += 45;
-
-        // Botón Cobrar (F12)
-        _btnCobrar = new Button
-        {
-            Text = "💳 COBRAR Y FACTURAR\n(F12)",
-            Location = new Point(15, yTotales),
-            Size = new Size(305, 65),
-            BackColor = Color.FromArgb(39, 174, 96),
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 12, FontStyle.Bold),
-            Cursor = Cursors.Hand
-        };
-        _btnCobrar.FlatAppearance.BorderSize = 0;
-        _btnCobrar.Click += async (s, e) => await ProcesarCobroVentaAsync();
-        yTotales += 75;
-
-        _btnLimpiar = new Button
-        {
-            Text = "🗑️ Limpiar Carrito (F4)",
-            Location = new Point(15, yTotales),
-            Size = new Size(305, 38),
-            BackColor = Color.FromArgb(231, 76, 60),
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 9, FontStyle.Bold),
-            Cursor = Cursors.Hand
-        };
-        _btnLimpiar.FlatAppearance.BorderSize = 0;
-        _btnLimpiar.Click += (s, e) =>
-        {
-            _carrito.Clear();
-            RefrescarGridCarrito();
-        };
-        yTotales += 46;
-
-        _btnHistorial = new Button
-        {
-            Text = "📜 Historial de Ventas (F6)",
-            Location = new Point(15, yTotales),
-            Size = new Size(305, 38),
-            BackColor = Color.FromArgb(52, 152, 219),
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 9, FontStyle.Bold),
-            Cursor = Cursors.Hand
-        };
-        _btnHistorial.FlatAppearance.BorderSize = 0;
-        _btnHistorial.Click += (s, e) =>
-        {
-            var f = new HistorialVentasForm(_ventaService, _sesion);
-            f.ShowDialog(this);
-        };
-
-        pnlTotales.Controls.Add(lblResumenTitulo);
-        pnlTotales.Controls.Add(pnlTotalGrande);
-        pnlTotales.Controls.Add(lblSubtxt);
-        pnlTotales.Controls.Add(_lblSubtotal);
-        pnlTotales.Controls.Add(lblItbistxt);
-        pnlTotales.Controls.Add(_lblItbis);
-        pnlTotales.Controls.Add(lblDesctxt);
-        pnlTotales.Controls.Add(_numDescuento);
-        pnlTotales.Controls.Add(_btnCobrar);
-        pnlTotales.Controls.Add(_btnLimpiar);
-        pnlTotales.Controls.Add(_btnHistorial);
-
-        Controls.Add(pnlHeader);
-        Controls.Add(pnlFiscal);
-        Controls.Add(pnlBusqueda);
-        Controls.Add(_gridCarrito);
-        Controls.Add(pnlTotales);
+        pnlPrincipal.Controls.Add(pnlCentro);
+        pnlPrincipal.Controls.Add(pnlHeader);
+        Controls.Add(pnlPrincipal);
     }
 
     private void ConfigurarColumnasGrid()
     {
         _gridCarrito.Columns.Clear();
-        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Sku", HeaderText = "SKU", ReadOnly = true, FillWeight = 60 });
-        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Producto", HeaderText = "Producto", ReadOnly = true, FillWeight = 160 });
-        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Cantidad", HeaderText = "Cant.", ReadOnly = false, FillWeight = 45 });
-        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Precio", HeaderText = "Precio (RD$)", ReadOnly = true, FillWeight = 70 });
-        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Itbis", HeaderText = "ITBIS 18%", ReadOnly = true, FillWeight = 65 });
-        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Total", HeaderText = "Total (RD$)", ReadOnly = true, FillWeight = 75 });
-        _gridCarrito.Columns.Add(new DataGridViewButtonColumn { Name = "Accion", HeaderText = "Quitar", Text = "❌", UseColumnTextForButtonValue = true, FillWeight = 40 });
+        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Sku", HeaderText = "SKU", ReadOnly = true, MinimumWidth = 60, FillWeight = 50 });
+        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Producto", HeaderText = "Producto", ReadOnly = true, MinimumWidth = 110, FillWeight = 135 });
+        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Cantidad", HeaderText = "Cant.", ReadOnly = false, MinimumWidth = 40, FillWeight = 38 });
+        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Precio", HeaderText = "Precio (RD$)", ReadOnly = true, MinimumWidth = 65, FillWeight = 60 });
+        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Itbis", HeaderText = "ITBIS 18%", ReadOnly = true, MinimumWidth = 60, FillWeight = 55 });
+        _gridCarrito.Columns.Add(new DataGridViewTextBoxColumn { Name = "Total", HeaderText = "Total (RD$)", ReadOnly = true, MinimumWidth = 70, FillWeight = 65 });
+        _gridCarrito.Columns.Add(new DataGridViewButtonColumn { Name = "Accion", HeaderText = "Quitar", Text = "❌", UseColumnTextForButtonValue = true, MinimumWidth = 45, FillWeight = 35 });
     }
 
     private async void CargarTurnoActivo()
@@ -386,9 +658,99 @@ public class PuntoVentaForm : Form
         }
     }
 
+    private async Task CargarComboClientesAsync()
+    {
+        try
+        {
+            var clientes = await _clienteService.ObtenerTodosAsync(soloActivos: true);
+            var lista = new List<ClienteComboItem>
+            {
+                new(0, "-- Consumidor Final / Sin Registro --", null)
+            };
+            lista.AddRange(clientes.Select(c => new ClienteComboItem(c.Id, $"{c.NombreCompleto} ({(c.Telefono ?? "S/T")})", c)));
+
+            _cmbClientes.DisplayMember = nameof(ClienteComboItem.Texto);
+            _cmbClientes.ValueMember = nameof(ClienteComboItem.Id);
+            _cmbClientes.DataSource = lista;
+        }
+        catch
+        {
+            // Ignorar errores de carga inicial
+        }
+    }
+
+    private void SeleccionarClienteDeCombo()
+    {
+        if (_cmbClientes.SelectedItem is ClienteComboItem item && item.Cliente != null)
+        {
+            _clienteSeleccionado = item.Cliente;
+            _txtClienteNombre.Text = item.Cliente.NombreCompleto;
+            _txtClienteRnc.Text = item.Cliente.RncOCedula ?? string.Empty;
+
+            if (item.Cliente.EsFrecuente && item.Cliente.PorcentajeDescuento > 0)
+            {
+                // Calcular descuento porcentual
+                decimal subtotal = _carrito.Sum(x => x.SubtotalSinItbis);
+                decimal itbis = _carrito.Sum(x => x.Itbis);
+                decimal totalSinDesc = subtotal + itbis;
+                decimal desc = Math.Round(totalSinDesc * (item.Cliente.PorcentajeDescuento / 100m), 2);
+                _numDescuento.Value = desc;
+            }
+        }
+        else
+        {
+            _clienteSeleccionado = null;
+        }
+    }
+
+    private async Task RegistrarNuevoClienteRapidoAsync()
+    {
+        using var modal = new ClienteModalForm();
+        if (modal.ShowDialog(this) == DialogResult.OK && modal.ClienteGuardado != null)
+        {
+            try
+            {
+                var nuevo = await _clienteService.CrearAsync(modal.ClienteGuardado);
+                await CargarComboClientesAsync();
+                _cmbClientes.SelectedValue = nuevo.Id;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al crear cliente: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    private async Task CargarCatalogoProductosAsync()
+    {
+        try
+        {
+            _catalogoProductos = await _productoService.ObtenerProductosAsync(soloActivos: true);
+        }
+        catch
+        {
+            _catalogoProductos = new List<Producto>();
+        }
+    }
+
     private async Task BuscarYAgregarProductoAsync(string criterio)
     {
         if (string.IsNullOrWhiteSpace(criterio)) return;
+
+        // Si es un IMEI escaneado directamente
+        var unidadImei = await _productoService.ObtenerUnidadPorImeiAsync(criterio);
+        if (unidadImei != null)
+        {
+            if (unidadImei.Estado != EstadoUnidadProducto.EnStock)
+            {
+                MessageBox.Show($"La unidad con IMEI '{criterio}' no está disponible (Estado: {unidadImei.Estado}).", "IMEI no disponible", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _txtBusquedaProducto.Clear();
+                return;
+            }
+
+            await AgregarProductoAlCarritoAsync(unidadImei.Producto, unidadImei.Imei, unidadImei.Id);
+            return;
+        }
 
         var prod = await _productoService.BuscarPorCodigoBarrasOSkuAsync(criterio);
         if (prod == null)
@@ -404,6 +766,11 @@ public class PuntoVentaForm : Form
             return;
         }
 
+        await AgregarProductoAlCarritoAsync(prod);
+    }
+
+    private async Task AgregarProductoAlCarritoAsync(Producto prod, string? imeiSeleccionado = null, int? unidadIdSeleccionada = null)
+    {
         if (prod.StockActual <= 0)
         {
             MessageBox.Show($"El producto '{prod.Nombre}' está AGOTADO en inventario.", "Stock Agotado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -411,30 +778,111 @@ public class PuntoVentaForm : Form
             return;
         }
 
-        var itemExistente = _carrito.FirstOrDefault(x => x.ProductoId == prod.Id);
-        if (itemExistente != null)
+        // Si el producto requiere serie (celular) y no se escaneó directamente la unidad
+        if (prod.RequiereSerie && string.IsNullOrEmpty(imeiSeleccionado))
         {
-            if (itemExistente.Cantidad + 1 > prod.StockActual)
+            var unidadesDisponibles = await _productoService.ObtenerUnidadesPorProductoAsync(prod.Id, EstadoUnidadProducto.EnStock);
+            // Filtrar las que ya están en el carrito actual
+            var imeisEnCarrito = _carrito.Where(c => c.UnidadProductoId.HasValue).Select(c => c.UnidadProductoId!.Value).ToHashSet();
+            var disponibles = unidadesDisponibles.Where(u => !imeisEnCarrito.Contains(u.Id)).ToList();
+
+            if (disponibles.Count == 0)
             {
-                MessageBox.Show($"No hay suficiente stock. Stock disponible: {prod.StockActual}.", "Límite de Stock", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"No hay unidades físicas disponibles con IMEI en stock para '{prod.Nombre}'.", "Sin IMEI en Stock", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _txtBusquedaProducto.Clear();
                 return;
             }
-            itemExistente.Cantidad++;
+
+            using var dlgSel = new Form
+            {
+                Text = $"Seleccionar IMEI - {prod.Nombre}",
+                Size = new Size(420, 240),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                Font = new Font("Segoe UI", 9.5F)
+            };
+
+            var lblPrompt = new Label { Text = "Seleccione o escanee la unidad física (IMEI):", Location = new Point(15, 15), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
+            dlgSel.Controls.Add(lblPrompt);
+
+            var cbImeis = new ComboBox { Location = new Point(15, 45), Width = 370, DropDownStyle = ComboBoxStyle.DropDownList };
+            foreach (var u in disponibles)
+            {
+                cbImeis.Items.Add($"{u.Imei} {(string.IsNullOrEmpty(u.Notas) ? "" : $"({u.Notas})")}");
+            }
+            cbImeis.SelectedIndex = 0;
+            dlgSel.Controls.Add(cbImeis);
+
+            var btnOk = new Button { Text = "Aceptar", Location = new Point(200, 140), Size = new Size(95, 32), DialogResult = DialogResult.OK };
+            UITheme.AplicarBotonPrimario(btnOk);
+            dlgSel.Controls.Add(btnOk);
+
+            var btnCanc = new Button { Text = "Cancelar", Location = new Point(300, 140), Size = new Size(85, 32), DialogResult = DialogResult.Cancel };
+            UITheme.AplicarBotonSecundario(btnCanc);
+            dlgSel.Controls.Add(btnCanc);
+
+            dlgSel.AcceptButton = btnOk;
+            dlgSel.CancelButton = btnCanc;
+
+            if (dlgSel.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            var selUnidad = disponibles[cbImeis.SelectedIndex];
+            imeiSeleccionado = selUnidad.Imei;
+            unidadIdSeleccionada = selUnidad.Id;
         }
-        else
+
+        if (prod.RequiereSerie)
         {
+            // Celulares se agregan como filas individuales con su propio IMEI
             _carrito.Add(new ItemCarritoVentaDto
             {
                 ProductoId = prod.Id,
                 Sku = prod.Sku,
                 CodigoBarras = prod.CodigoBarras,
-                NombreProducto = prod.Nombre,
+                NombreProducto = $"{prod.Nombre} [IMEI: {imeiSeleccionado}]",
                 Cantidad = 1,
                 PrecioUnitario = prod.PrecioVenta,
                 CostoUnitario = prod.PrecioCosto,
                 StockDisponible = prod.StockActual,
-                AplicaItbis = true
+                AplicaItbis = true,
+                RequiereSerie = true,
+                UnidadProductoId = unidadIdSeleccionada,
+                Imei = imeiSeleccionado
             });
+        }
+        else
+        {
+            var itemExistente = _carrito.FirstOrDefault(x => x.ProductoId == prod.Id);
+            if (itemExistente != null)
+            {
+                if (itemExistente.Cantidad + 1 > prod.StockActual)
+                {
+                    MessageBox.Show($"No hay suficiente stock. Stock disponible: {prod.StockActual}.", "Límite de Stock", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                itemExistente.Cantidad++;
+            }
+            else
+            {
+                _carrito.Add(new ItemCarritoVentaDto
+                {
+                    ProductoId = prod.Id,
+                    Sku = prod.Sku,
+                    CodigoBarras = prod.CodigoBarras,
+                    NombreProducto = prod.Nombre,
+                    Cantidad = 1,
+                    PrecioUnitario = prod.PrecioVenta,
+                    CostoUnitario = prod.PrecioCosto,
+                    StockDisponible = prod.StockActual,
+                    AplicaItbis = true,
+                    RequiereSerie = false
+                });
+            }
         }
 
         _txtBusquedaProducto.Clear();
@@ -541,6 +989,7 @@ public class PuntoVentaForm : Form
             UsuarioId = _sesion.UsuarioId,
             TurnoId = _turnoActivo.Id,
             TipoComprobante = tipoComp,
+            ClienteId = _clienteSeleccionado?.Id,
             NombreCliente = string.IsNullOrWhiteSpace(_txtClienteNombre.Text) ? "Consumidor Final" : _txtClienteNombre.Text.Trim(),
             RncCliente = _txtClienteRnc.Text.Trim(),
             Descuento = _numDescuento.Value,
@@ -580,9 +1029,13 @@ public class PuntoVentaForm : Form
         // Limpiar para la siguiente venta
         _carrito.Clear();
         _numDescuento.Value = 0;
+        _clienteSeleccionado = null;
+        if (_cmbClientes.Items.Count > 0) _cmbClientes.SelectedIndex = 0;
         _txtClienteNombre.Clear();
         _txtClienteRnc.Clear();
         RefrescarGridCarrito();
         _txtBusquedaProducto.Focus();
     }
+
+    private record ClienteComboItem(int Id, string Texto, Cliente? Cliente);
 }

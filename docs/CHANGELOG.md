@@ -1,5 +1,47 @@
 # CHANGELOG
 
+## [0.14.0] - 2026-09-21
+- **Adaptación Visual y Rediseño de Interfaz según Mockup Canónico**:
+  - Implementación del tema visual `UITheme` basado en la paleta moderna del mockup: fondos claros (`Surface1` #ffffff, `Surface2` #f6f7f9, `AppBg` #eceef1), bordes suaves (`Border` #e5e7eb) y acentos por rol (`Primary` #2563eb, `Pro` #7c3aed, `Success` #15803d, `Warning` #b45309).
+  - Barra superior de ventana nativa personalizada con 3 puntos de control de ventana y título de marca `📱 Sistema POS — CellCenter RD`.
+  - Barra lateral estilizada con avatar circular con iniciales del usuario (`RP`, `JD`, `CM`, `SA`), indicador de rol y navegación activa con barra de acento lateral.
+  - Vistas de inicio personalizadas por rol según los mockups:
+    - **Cajero**: Header de turno abierto/cerrado con botón de acción rápida, 3 tarjetas métricas (ventas de hoy, transacciones, reparaciones listas), cuadrícula de 4 accesos directos y listado de entregas pendientes.
+    - **Técnico**: Rol especializado con permisos para taller (`Reparaciones.Crear`, `Reparaciones.Editar`, `Reparaciones.Ver`), clientes y consulta de productos; dashboard con métricas de taller, stock de celulares y acciones rápidas.
+    - **Admin (Dueño)**: Métricas mensuales del negocio (ventas, gastos, reparaciones, empleados), banner informativo de modo multi-caja exclusivo y acciones gerenciales.
+    - **Super Admin**: Panel de soporte técnico y control total, métricas de inventario, stock bajo y switch de control de conmutación multi-caja LAN.
+- **Robustez en la Base de Datos SQLite**:
+  - Incorporación de `AplicarMigracionesSqliteAsync` en `DbInitializer` para actualización segura y automática del esquema SQLite (`ALTER TABLE ADD COLUMN` / `CREATE TABLE IF NOT EXISTS`) en bases de datos locales preexistentes.
+  - Sembrado de usuario técnico inicial `junior` / `Junior De León` con rol `Tecnico`.
+- **Sincronización Canónica de Reglas**:
+  - Actualización y unificación de `PROJECT_CONTEXT_RULES.md` con las reglas de negocio de `PROJECT_CONTEXT_RULES (2).md`.
+
+## [0.13.0] - 2026-09-21
+- Implementación de las funcionalidades añadidas en `PROJECT_CONTEXT_RULES.md`:
+  1. **Módulo Integral de Clientes (Fase Clientes)**:
+     - Entidad `Cliente` con trazabilidad completa (nombre, teléfono, email, cédula/RNC, dirección, notas).
+     - Flag de fidelización `EsFrecuente` con `PorcentajeDescuento` configurable.
+     - Búsqueda ágil en punto de venta y taller por teléfono o nombre y modal de registro rápido en caliente.
+     - Historial unificado de compras y órdenes de reparación (`IClienteService.ObtenerHistorialVentasAsync` y `ObtenerHistorialReparacionesAsync`).
+     - Pantalla de administración `ClientesForm` y modal de edición/creación `ClienteModalForm`.
+  2. **Modelo de Inventario Mixto (Artículos Seriados con IMEI vs Artículos por Cantidad)**:
+     - Entidad `UnidadProducto` con índice único para `Imei` y ciclo de vida (`EnStock`, `Vendido`, `EnGarantia`, `Devuelto`).
+     - Flag `RequiereSerie` en `Producto` para diferenciar celulares de accesorios y papelería.
+     - Captura y validación de lote de IMEIs al registrar compras de celulares a proveedores (`CompraService`).
+     - Selección de IMEI disponible al vender celulares en `PuntoVentaForm` con asignación en `DetalleVenta` y reversión a stock en caso de anulación de venta.
+     - Modal de gestión de unidades e inspección física `GestionarImeisModalForm` accesible desde `ProductosForm`.
+  3. **Módulo de Taller y Reparaciones de Celulares (Flujo Simple)**:
+     - Entidad `OrdenReparacion` y ciclo de estados simplificado (`EnReparacion` $\rightarrow$ `ListaParaEntrega` $\rightarrow$ `Entregada` / `Cancelada`).
+     - Generación correlativa de número de orden (`REP-YYYY-XXXX`).
+     - Pantalla de taller `ReparacionesForm` con filtros rápidos por estado y búsqueda por cliente o IMEI.
+     - Modal de recepción `OrdenReparacionModalForm` e impresión de comprobante de recepción para el cliente.
+     - Modal de entrega y cobranza `CobroReparacionModalForm` integrado con `IPagoService` y el turno activo de caja.
+  4. **Decisiones Arquitectónicas Documentadas**:
+     - `DEC-011`: Módulo de Clientes, Búsqueda Ágil y Descuentos para Clientes Frecuentes.
+     - `DEC-012`: Modelo de Inventario Mixto (Artículos Seriados con IMEI vs Artículos por Cantidad).
+     - `DEC-013`: Módulo de Taller y Reparaciones de Celulares con Flujo Simple e Integración de Caja.
+- Suite de pruebas ampliada con 11 nuevas pruebas unitarias para `ClienteService`, `UnidadProducto`, `CompraService` con series y `ReparacionService` (total de 96 pruebas pasando al 100%).
+
 ## [0.12.0] - 2026-09-20
 - Implementación completa de la Fase 12: Ventas, Facturación comercial y Comprobantes Fiscales (NCF DGII).
 - Registro de decisión arquitectónica DEC-010: Arquitectura de Ventas, Facturación y Control de Comprobantes Fiscales (NCF) DGII.

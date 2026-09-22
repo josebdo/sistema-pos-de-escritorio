@@ -35,7 +35,7 @@ public class UsuarioModalForm : Form
     {
         Text = _usuarioIdParaEditar.HasValue ? "Editar Usuario / Empleado" : "Crear Nuevo Usuario / Empleado";
         Size = new Size(480, 560);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -134,14 +134,17 @@ public class UsuarioModalForm : Form
             {
                 _txtNombreCompleto.Text = usuario.NombreCompleto;
                 _txtNombreUsuario.Text = usuario.NombreUsuario;
-                _txtNombreUsuario.ReadOnly = true; // No editable para conservar integridad
+                _txtNombreUsuario.ReadOnly = false; // Permitir al Admin/SuperAdmin modificar el nombre de usuario
                 _txtEmail.Text = usuario.Email ?? string.Empty;
                 _txtTelefono.Text = usuario.Telefono ?? string.Empty;
                 _cbRoles.SelectedValue = usuario.RolId;
 
-                // Ocultar campo de contraseña temporal en edición
-                _lblPassLabel.Visible = false;
-                _txtPasswordTemporal.Visible = false;
+                // Permitir restablecer contraseña si se especifica una nueva
+                _lblPassLabel.Text = "Nueva Contraseña (opcional, mín. 6 car.)";
+                _txtPasswordTemporal.Text = string.Empty;
+                _txtPasswordTemporal.PasswordChar = '●';
+                _lblPassLabel.Visible = true;
+                _txtPasswordTemporal.Visible = true;
             }
         }
     }
@@ -173,7 +176,19 @@ public class UsuarioModalForm : Form
         {
             if (_usuarioIdParaEditar.HasValue)
             {
-                var ok = await _usuarioService.ActualizarUsuarioAsync(_usuarioIdParaEditar.Value, nombre, rolId, email, telefono);
+                var ok = await _usuarioService.ActualizarUsuarioAsync(_usuarioIdParaEditar.Value, nombre, rolId, email, telefono, usuario);
+                var pass = _txtPasswordTemporal.Text.Trim();
+                if (!string.IsNullOrEmpty(pass))
+                {
+                    if (pass.Length < 6)
+                    {
+                        _lblError.Text = "La nueva contraseña debe tener al menos 6 caracteres.";
+                        _btnGuardar.Enabled = true;
+                        return;
+                    }
+                    await _usuarioService.ResetearPasswordAsync(_usuarioIdParaEditar.Value, pass);
+                }
+
                 if (ok)
                 {
                     DialogResult = DialogResult.OK;

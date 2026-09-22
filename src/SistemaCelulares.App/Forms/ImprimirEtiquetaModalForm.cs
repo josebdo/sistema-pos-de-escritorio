@@ -38,9 +38,9 @@ public class ImprimirEtiquetaModalForm : Form
 
     private void InitializeCustomComponents()
     {
-        Text = $"Etiqueta de Código de Barras - {_producto.Sku}";
+        Text = "Impresión de Etiquetas de Código de Barras";
         Size = new Size(520, 480);
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

@@ -22,6 +22,7 @@ public class UsuariosForm : Form
     private Button _btnEditar = null!;
     private Button _btnToggleEstado = null!;
     private Button _btnResetPass = null!;
+    private Button _btnRoles = null!;
     private List<Usuario> _listaUsuarios = new();
 
     public UsuariosForm(
@@ -77,54 +78,84 @@ public class UsuariosForm : Form
         panelPrincipal.Controls.Add(header);
 
         // Barra de Herramientas / Búsqueda
-        var toolbar = new Panel { Dock = DockStyle.Top, Height = 55 };
-
-        var lblBuscar = new Label { Text = "🔍 Buscar:", Location = new Point(0, 15), AutoSize = true, Font = UITheme.SectionFont };
-        toolbar.Controls.Add(lblBuscar);
-
-        _txtBuscar = new TextBox { Location = new Point(70, 12), Size = new Size(240, 30), Font = new Font("Segoe UI", 10F) };
-        _txtBuscar.TextChanged += (s, e) => FiltrarGrid();
-        toolbar.Controls.Add(_txtBuscar);
-
-        _chkSoloActivos = new CheckBox { Text = "Solo activos", Location = new Point(330, 14), Checked = true, AutoSize = true };
-        _chkSoloActivos.CheckedChanged += async (s, e) => await RecargarUsuariosAsync();
-        toolbar.Controls.Add(_chkSoloActivos);
-
-        // Botones de acción a la derecha
-        var panelBotones = new FlowLayoutPanel
+        // Toolbar Contenedor
+        var toolbarContenedor = new Panel
         {
-            Dock = DockStyle.Right,
-            FlowDirection = FlowDirection.RightToLeft,
-            Width = 480,
-            Height = 50
+            Dock = DockStyle.Top,
+            Height = 52,
+            Padding = new Padding(0, 0, 0, 8)
         };
 
-        _btnNuevo = new Button { Text = "➕ Nuevo Usuario", Size = new Size(130, 38) };
+        // Filtros Izquierda
+        var flowFiltros = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Left,
+            AutoSize = true,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(0, 4, 0, 4)
+        };
+
+        var lblBuscar = new Label { Text = "🔍 Buscar:", AutoSize = true, Font = UITheme.SectionFont, Margin = new Padding(0, 6, 6, 0) };
+        flowFiltros.Controls.Add(lblBuscar);
+
+        _txtBuscar = new TextBox { Size = new Size(200, 28), Font = new Font("Segoe UI", 9.5F), Margin = new Padding(0, 2, 12, 0) };
+        _txtBuscar.TextChanged += (s, e) => FiltrarGrid();
+        flowFiltros.Controls.Add(_txtBuscar);
+
+        _chkSoloActivos = new CheckBox { Text = "Solo activos", Checked = true, AutoSize = true, Margin = new Padding(0, 6, 0, 0) };
+        _chkSoloActivos.CheckedChanged += async (s, e) => await RecargarUsuariosAsync();
+        flowFiltros.Controls.Add(_chkSoloActivos);
+
+        toolbarContenedor.Controls.Add(flowFiltros);
+
+        // Botones de acción a la derecha
+        var flowBotones = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Right,
+            AutoSize = true,
+            FlowDirection = FlowDirection.RightToLeft,
+            WrapContents = false,
+            Padding = new Padding(0, 2, 0, 4)
+        };
+
+        _btnNuevo = new Button { Text = "➕ Nuevo Usuario", Size = new Size(140, 36), Margin = new Padding(6, 0, 0, 0) };
         UITheme.AplicarBotonPrimario(_btnNuevo);
         _btnNuevo.Click += async (s, e) => await AbrirCrearUsuarioAsync();
         _btnNuevo.Visible = _sesionActual.TienePermiso(Permisos.UsuariosCrear);
-        panelBotones.Controls.Add(_btnNuevo);
+        flowBotones.Controls.Add(_btnNuevo);
 
-        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(95, 38) };
+        _btnEditar = new Button { Text = "✏️ Editar", Size = new Size(95, 36), Margin = new Padding(6, 0, 0, 0) };
         UITheme.AplicarBotonSecundario(_btnEditar);
         _btnEditar.Click += async (s, e) => await AbrirEditarUsuarioAsync();
         _btnEditar.Visible = _sesionActual.TienePermiso(Permisos.UsuariosEditar);
-        panelBotones.Controls.Add(_btnEditar);
+        flowBotones.Controls.Add(_btnEditar);
 
-        _btnToggleEstado = new Button { Text = "🔄 Activar/Desactivar", Size = new Size(140, 38) };
+        _btnToggleEstado = new Button { Text = "🔄 Act/Desactivar", Size = new Size(135, 36), Margin = new Padding(6, 0, 0, 0) };
         UITheme.AplicarBotonSecundario(_btnToggleEstado);
         _btnToggleEstado.Click += async (s, e) => await ToggleEstadoUsuarioAsync();
         _btnToggleEstado.Visible = _sesionActual.TienePermiso(Permisos.UsuariosDesactivar);
-        panelBotones.Controls.Add(_btnToggleEstado);
+        flowBotones.Controls.Add(_btnToggleEstado);
 
-        _btnResetPass = new Button { Text = "🔑 Reset Clave", Size = new Size(110, 38) };
+        _btnResetPass = new Button { Text = "🔑 Reset Clave", Size = new Size(115, 36), Margin = new Padding(6, 0, 0, 0) };
         UITheme.AplicarBotonSecundario(_btnResetPass);
         _btnResetPass.Click += (s, e) => AbrirResetPassword();
         _btnResetPass.Visible = _sesionActual.TienePermiso(Permisos.UsuariosResetPassword);
-        panelBotones.Controls.Add(_btnResetPass);
+        flowBotones.Controls.Add(_btnResetPass);
 
-        toolbar.Controls.Add(panelBotones);
-        panelPrincipal.Controls.Add(toolbar);
+        _btnRoles = new Button { Text = "🛡️ Roles y Permisos", Size = new Size(160, 36), Margin = new Padding(6, 0, 0, 0) };
+        UITheme.AplicarBotonSecundario(_btnRoles);
+        _btnRoles.Click += async (s, e) =>
+        {
+            using var dlg = new RolesPermisosForm(_rolService, _sesionActual);
+            dlg.ShowDialog(this);
+            await RecargarUsuariosAsync();
+        };
+        _btnRoles.Visible = _sesionActual.EsSuperAdmin || _sesionActual.RolNombre == Rol.Admin || _sesionActual.TienePermiso(Permisos.RolesVer);
+        flowBotones.Controls.Add(_btnRoles);
+
+        toolbarContenedor.Controls.Add(flowBotones);
+        panelPrincipal.Controls.Add(toolbarContenedor);
 
         // DataGridView
         var panelGrid = new Panel

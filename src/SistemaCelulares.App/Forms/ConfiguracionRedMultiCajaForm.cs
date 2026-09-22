@@ -43,9 +43,9 @@ public class ConfiguracionRedMultiCajaForm : Form
 
     private void InitializeComponents()
     {
-        Text = "Configuración de Topología y Modo Multi-Caja (Super Admin)";
-        Size = new Size(720, 680);
-        StartPosition = FormStartPosition.CenterParent;
+        Text = "Configuración de Red Local y Arquitectura Multi-Caja";
+        Size = new Size(820, 680);
+        StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

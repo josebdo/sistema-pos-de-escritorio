@@ -32,88 +32,94 @@ public class HistorialVentasForm : Form
         Text = "Historial de Ventas y Comprobantes Fiscales";
         Size = new Size(1050, 650);
         StartPosition = FormStartPosition.CenterParent;
-        BackColor = Color.FromArgb(248, 249, 250);
+        BackColor = UITheme.AppBg;
+        Font = UITheme.BodyFont;
+
+        var panelPrincipal = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20) };
+        Controls.Add(panelPrincipal);
 
         // Header
         var pnlHeader = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 60,
-            BackColor = Color.FromArgb(24, 43, 73),
-            Padding = new Padding(20, 15, 20, 15)
+            Height = 60
         };
 
         var lblTitulo = new Label
         {
-            Text = "📜 HISTORIAL DE VENTAS Y FACTURACIÓN",
-            ForeColor = Color.White,
-            Font = new Font("Segoe UI", 12, FontStyle.Bold),
-            Dock = DockStyle.Fill
+            Text = "Historial de Ventas y Comprobantes Fiscales",
+            Font = UITheme.TitleFont,
+            ForeColor = UITheme.DarkBg,
+            Location = new Point(0, 5),
+            AutoSize = true
         };
         pnlHeader.Controls.Add(lblTitulo);
 
+        var lblSub = new Label
+        {
+            Text = "Consulte facturas emitidas, NCF DGII, comprobantes fiscales, anulación y reimpresión de tickets",
+            Font = UITheme.SmallFont,
+            ForeColor = UITheme.TextMuted,
+            Location = new Point(0, 35),
+            AutoSize = true
+        };
+        pnlHeader.Controls.Add(lblSub);
+        panelPrincipal.Controls.Add(pnlHeader);
+
         // Barra de Filtros
-        var pnlFiltros = new Panel
+        var flowFiltros = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 65,
-            BackColor = Color.White,
-            Padding = new Padding(15, 12, 15, 12)
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Padding = new Padding(0, 6, 0, 10)
         };
 
-        var lblDesde = new Label { Text = "Desde:", Location = new Point(15, 18), AutoSize = true, Font = new Font("Segoe UI", 9) };
-        _dtpDesde = new DateTimePicker { Location = new Point(65, 15), Size = new Size(130, 25), Format = DateTimePickerFormat.Short, Value = DateTime.Today.AddDays(-30) };
+        var lblDesde = new Label { Text = "Desde:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(0, 6, 6, 4) };
+        flowFiltros.Controls.Add(lblDesde);
 
-        var lblHasta = new Label { Text = "Hasta:", Location = new Point(210, 18), AutoSize = true, Font = new Font("Segoe UI", 9) };
-        _dtpHasta = new DateTimePicker { Location = new Point(260, 15), Size = new Size(130, 25), Format = DateTimePickerFormat.Short, Value = DateTime.Today.AddDays(1) };
+        _dtpDesde = new DateTimePicker { Size = new Size(125, 28), Format = DateTimePickerFormat.Short, Value = DateTime.Today.AddDays(-30), Margin = new Padding(0, 2, 10, 4) };
+        _dtpDesde.ValueChanged += (s, e) => CargarHistorial();
+        flowFiltros.Controls.Add(_dtpDesde);
 
-        var lblBuscar = new Label { Text = "Buscar:", Location = new Point(410, 18), AutoSize = true, Font = new Font("Segoe UI", 9) };
-        _txtBusqueda = new TextBox { Location = new Point(465, 15), Size = new Size(220, 25), PlaceholderText = "No. Factura / NCF / Cliente" };
+        var lblHasta = new Label { Text = "Hasta:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(4, 6, 6, 4) };
+        flowFiltros.Controls.Add(lblHasta);
+
+        _dtpHasta = new DateTimePicker { Size = new Size(125, 28), Format = DateTimePickerFormat.Short, Value = DateTime.Today.AddDays(1), Margin = new Padding(0, 2, 10, 4) };
+        _dtpHasta.ValueChanged += (s, e) => CargarHistorial();
+        flowFiltros.Controls.Add(_dtpHasta);
+
+        var lblBuscar = new Label { Text = "🔍 Buscar:", AutoSize = true, Font = UITheme.BodyFont, Margin = new Padding(4, 6, 6, 4) };
+        flowFiltros.Controls.Add(lblBuscar);
+
+        _txtBusqueda = new TextBox { Size = new Size(220, 28), Font = new Font("Segoe UI", 9.5F), PlaceholderText = "No. Factura / NCF / Cliente", Margin = new Padding(0, 2, 10, 4) };
         _txtBusqueda.TextChanged += (s, e) => FiltrarVentas();
+        flowFiltros.Controls.Add(_txtBusqueda);
 
         var btnFiltrar = new Button
         {
-            Text = "🔍 Filtrar",
-            Location = new Point(700, 13),
-            Size = new Size(95, 29),
-            BackColor = Color.FromArgb(52, 152, 219),
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-            Cursor = Cursors.Hand
+            Text = "🔄 Actualizar",
+            Size = new Size(115, 30),
+            Margin = new Padding(0, 1, 6, 4)
         };
-        btnFiltrar.FlatAppearance.BorderSize = 0;
+        UITheme.AplicarBotonSecundario(btnFiltrar);
         btnFiltrar.Click += (s, e) => CargarHistorial();
+        flowFiltros.Controls.Add(btnFiltrar);
 
-        pnlFiltros.Controls.Add(lblDesde);
-        pnlFiltros.Controls.Add(_dtpDesde);
-        pnlFiltros.Controls.Add(lblHasta);
-        pnlFiltros.Controls.Add(_dtpHasta);
-        pnlFiltros.Controls.Add(lblBuscar);
-        pnlFiltros.Controls.Add(_txtBusqueda);
-        pnlFiltros.Controls.Add(btnFiltrar);
-
-        // Grid
-        _gridVentas = new DataGridView
-        {
-            Dock = DockStyle.Fill,
-            BackgroundColor = Color.White,
-            BorderStyle = BorderStyle.None,
-            AllowUserToAddRows = false,
-            AllowUserToDeleteRows = false,
-            ReadOnly = true,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            RowHeadersVisible = false,
-            Font = new Font("Segoe UI", 9)
-        };
-
+        // DataGridView
+        var panelGrid = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(1) };
+        _gridVentas = new DataGridView { Dock = DockStyle.Fill };
+        UITheme.EstilizarDataGridView(_gridVentas);
         ConfigurarGrid();
         _gridVentas.CellContentClick += async (s, e) => await ManejarAccionGrid(e.RowIndex, e.ColumnIndex);
+        panelGrid.Controls.Add(_gridVentas);
 
-        Controls.Add(_gridVentas);
-        Controls.Add(pnlFiltros);
-        Controls.Add(pnlHeader);
+        // Agregar al panel principal en orden de acoplamiento correcto
+        panelPrincipal.Controls.Add(panelGrid);
+        panelPrincipal.Controls.Add(flowFiltros);
+        panelPrincipal.Controls.Add(pnlHeader);
     }
 
     private void ConfigurarGrid()
@@ -122,7 +128,7 @@ public class HistorialVentasForm : Form
         _gridVentas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Id", Visible = false });
         _gridVentas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Factura", HeaderText = "Factura", FillWeight = 85 });
         _gridVentas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Ncf", HeaderText = "NCF DGII", FillWeight = 95 });
-        _gridVentas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Fecha", HeaderText = "Fecha", FillWeight = 100 });
+        _gridVentas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Fecha", HeaderText = "Fecha / Hora", FillWeight = 100 });
         _gridVentas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Cliente", HeaderText = "Cliente", FillWeight = 140 });
         _gridVentas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Subtotal", HeaderText = "Subtotal", FillWeight = 75 });
         _gridVentas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Itbis", HeaderText = "ITBIS (18%)", FillWeight = 75 });
@@ -132,11 +138,20 @@ public class HistorialVentasForm : Form
 
         _gridVentas.Columns.Add(new DataGridViewButtonColumn
         {
+            Name = "Detalle",
+            HeaderText = "Detalle",
+            Text = "🔍 Ver Detalle",
+            UseColumnTextForButtonValue = true,
+            FillWeight = 85
+        });
+
+        _gridVentas.Columns.Add(new DataGridViewButtonColumn
+        {
             Name = "Imprimir",
             HeaderText = "Ticket",
             Text = "🖨️ Ticket",
             UseColumnTextForButtonValue = true,
-            FillWeight = 65
+            FillWeight = 60
         });
 
         _gridVentas.Columns.Add(new DataGridViewButtonColumn
@@ -145,15 +160,32 @@ public class HistorialVentasForm : Form
             HeaderText = "Anular",
             Text = "⛔ Anular",
             UseColumnTextForButtonValue = true,
-            FillWeight = 65
+            FillWeight = 60
         });
+
+        _gridVentas.DoubleClick += (s, e) =>
+        {
+            if (_gridVentas.SelectedRows.Count > 0)
+            {
+                int ventaId = (int)_gridVentas.SelectedRows[0].Cells["Id"].Value;
+                AbrirDetalleVenta(ventaId);
+            }
+        };
+    }
+
+    private void AbrirDetalleVenta(int ventaId)
+    {
+        using var dlg = new DetalleVentaModalForm(ventaId, _ventaService, _sesion);
+        dlg.ShowDialog(this);
+        CargarHistorial();
     }
 
     private async void CargarHistorial()
     {
-        _ventasCargadas = await _ventaService.ObtenerHistorialAsync(
-            _dtpDesde.Value.Date,
-            _dtpHasta.Value.Date.AddDays(1).AddSeconds(-1));
+        var desdeUtc = _dtpDesde.Value.Date.ToUniversalTime();
+        var hastaUtc = _dtpHasta.Value.Date.AddDays(1).ToUniversalTime();
+
+        _ventasCargadas = await _ventaService.ObtenerHistorialAsync(desdeUtc, hastaUtc);
 
         FiltrarVentas();
     }
@@ -202,7 +234,11 @@ public class HistorialVentasForm : Form
 
         int ventaId = (int)_gridVentas.Rows[rowIndex].Cells["Id"].Value;
 
-        if (colIndex == _gridVentas.Columns["Imprimir"].Index)
+        if (colIndex == _gridVentas.Columns["Detalle"].Index)
+        {
+            AbrirDetalleVenta(ventaId);
+        }
+        else if (colIndex == _gridVentas.Columns["Imprimir"].Index)
         {
             try
             {

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCelulares.App.Common;
 using SistemaCelulares.App.Forms;
+using SistemaCelulares.Core.Constants;
 using SistemaCelulares.Core.Interfaces;
 using SistemaCelulares.Infrastructure.Data;
 using SistemaCelulares.Infrastructure.Security;
@@ -49,10 +50,9 @@ internal static class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        // Base de Datos SQLite local
-        var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sistema_celulares.db");
+        // Base de Datos SQLite local en ruta segura y aislada (ProgramData)
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite($"Data Source={dbPath}"));
+            options.UseSqlite($"Data Source={AppPaths.RutaBaseDatos}"));
 
         // Servicios del Dominio y Seguridad
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
@@ -70,19 +70,27 @@ internal static class Program
         services.AddScoped<IPagoService, PagoService>();
         services.AddSingleton<IConfiguracionRedService, ConfiguracionRedService>();
         services.AddScoped<IDataMigrationService, DataMigrationService>();
+        services.AddScoped<IClienteService, ClienteService>();
+        services.AddScoped<IReparacionService, ReparacionService>();
         services.AddScoped<IVentaService, VentaService>();
+        services.AddScoped<IConfiguracionNegocioService, ConfiguracionNegocioService>();
+        services.AddScoped<IBackupService, BackupService>();
 
         // Formularios
         services.AddTransient<LoginForm>();
         services.AddTransient<UsuariosForm>();
         services.AddTransient<RolesPermisosForm>();
         services.AddTransient<HistorialTurnosForm>();
+        services.AddTransient<ClientesForm>();
         services.AddTransient<ProductosForm>();
+        services.AddTransient<InventarioForm>();
         services.AddTransient<ProveedoresForm>();
         services.AddTransient<HistorialComprasForm>();
         services.AddTransient<AlertasStockForm>();
+        services.AddTransient<ReparacionesForm>();
         services.AddTransient<FinanzasForm>();
         services.AddTransient<ConfiguracionRedMultiCajaForm>();
+        services.AddTransient<ConfiguracionSistemaForm>();
         services.AddTransient<PuntoVentaForm>();
         services.AddTransient<HistorialVentasForm>();
     }

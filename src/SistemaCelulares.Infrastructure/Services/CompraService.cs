@@ -73,8 +73,37 @@ public class CompraService : ICompraService
 
             compra.Detalles.Add(detalle);
 
-            // Regla de Negocio (DEC-006):
-            // 1. Incrementar stock
+            // Regla de Negocio (DEC-006 & Serie IMEI):
+            // 1. Manejo de unidades por serie (Celulares) o stock normal
+            if (producto.RequiereSerie)
+            {
+                if (item.Imeis != null && item.Imeis.Count > 0)
+                {
+                    if (item.Imeis.Count != item.Cantidad)
+                    {
+                        throw new ArgumentException($"Se requieren {item.Cantidad} IMEIs para el producto '{producto.Nombre}', pero se suministraron {item.Imeis.Count}.");
+                    }
+
+                    foreach (var imei in item.Imeis)
+                    {
+                        var imeiLimpio = imei.Trim();
+                        var existe = await _context.UnidadesProducto.AnyAsync(u => u.Imei.ToLower() == imeiLimpio.ToLower(), cancellationToken);
+                        if (existe)
+                        {
+                            throw new InvalidOperationException($"El IMEI '{imeiLimpio}' ya existe en el sistema.");
+                        }
+
+                        _context.UnidadesProducto.Add(new UnidadProducto
+                        {
+                            ProductoId = producto.Id,
+                            Imei = imeiLimpio,
+                            Estado = EstadoUnidadProducto.EnStock,
+                            FechaIngreso = DateTime.UtcNow
+                        });
+                    }
+                }
+            }
+
             producto.StockActual += item.Cantidad;
 
             // 2. Actualizar precio de costo según método "último costo"
@@ -83,7 +112,12 @@ public class CompraService : ICompraService
                 producto.PrecioCosto = item.CostoUnitario;
             }
 
-            // 3. El precio de venta NO se actualiza automáticamente
+            // 3. Si se especificó un nuevo precio de venta, actualizarlo
+            if (item.NuevoPrecioVenta.HasValue && item.NuevoPrecioVenta.Value > 0)
+            {
+                producto.PrecioVenta = item.NuevoPrecioVenta.Value;
+            }
+
             producto.UltimaModificacion = DateTime.UtcNow;
         }
 
