@@ -49,7 +49,7 @@ public class LoginForm : Form
         // Header / Logo
         var lblIcon = new Label
         {
-            Text = "📱",
+            Text = "🖥️",
             Font = new Font("Segoe UI Emoji", 32F),
             AutoSize = false,
             Size = new Size(60, 55),
@@ -72,7 +72,7 @@ public class LoginForm : Form
 
         var lblSubtitulo = new Label
         {
-            Text = "Sistema Punto de Venta y Gestión de Celulares",
+            Text = "Sistema Punto de Venta y Gestión Comercial",
             Font = UITheme.SmallFont,
             ForeColor = UITheme.TextMuted,
             AutoSize = false,
