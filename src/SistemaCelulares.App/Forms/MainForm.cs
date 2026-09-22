@@ -35,6 +35,7 @@ public class MainForm : Form
         Text = $"Veyra POS ({_sesion.NombreCompleto} - {_sesion.RolNombre})";
         Size = new Size(1280, 800);
         StartPosition = FormStartPosition.CenterScreen;
+        WindowState = FormWindowState.Maximized;
         MinimumSize = new Size(1024, 700);
         Font = UITheme.BodyFont;
         BackColor = UITheme.AppBg;
