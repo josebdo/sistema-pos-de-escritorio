@@ -38,6 +38,7 @@ public class MainForm : Form
         MinimumSize = new Size(1024, 700);
         Font = UITheme.BodyFont;
         BackColor = UITheme.AppBg;
+        try { var ico = Icon.ExtractAssociatedIcon(Application.ExecutablePath); if (ico != null) Icon = ico; } catch { }
 
         // 1. Barra superior tipo ventana / marca
         _panelTopWindow = new Panel

@@ -34,6 +34,7 @@ public class LoginForm : Form
         MinimizeBox = false;
         BackColor = UITheme.AppBg;
         Font = UITheme.BodyFont;
+        try { var ico = Icon.ExtractAssociatedIcon(Application.ExecutablePath); if (ico != null) Icon = ico; } catch { }
 
         // Tarjeta Central
         var card = new Panel

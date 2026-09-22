@@ -39,6 +39,7 @@ Write-Host ""
 Write-Host "[3/3] Buscando Inno Setup Compiler para generar el instalador .exe..." -ForegroundColor Green
 
 $isccPaths = @(
+    "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
     "C:\Program Files\Inno Setup 6\ISCC.exe",
     "C:\Program Files (x86)\Inno Setup 5\ISCC.exe"
