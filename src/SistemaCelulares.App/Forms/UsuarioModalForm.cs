@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using SistemaCelulares.App.Common;
 using SistemaCelulares.Core.Entities;
 using SistemaCelulares.Core.Interfaces;
+using SistemaCelulares.Core.Models;
 
 namespace SistemaCelulares.App.Forms;
 
@@ -10,6 +11,7 @@ public class UsuarioModalForm : Form
 {
     private readonly IUsuarioService _usuarioService;
     private readonly IRolService _rolService;
+    private readonly SesionUsuario? _sesionActual;
     private readonly int? _usuarioIdParaEditar;
 
     private TextBox _txtNombreCompleto = null!;
@@ -22,10 +24,11 @@ public class UsuarioModalForm : Form
     private Label _lblError = null!;
     private Button _btnGuardar = null!;
 
-    public UsuarioModalForm(IUsuarioService usuarioService, IRolService rolService, int? usuarioId = null)
+    public UsuarioModalForm(IUsuarioService usuarioService, IRolService rolService, SesionUsuario? sesionActual = null, int? usuarioId = null)
     {
         _usuarioService = usuarioService;
         _rolService = rolService;
+        _sesionActual = sesionActual;
         _usuarioIdParaEditar = usuarioId;
         InitializeCustomComponents();
         Load += async (s, e) => await CargarDatosInicialesAsync();
@@ -122,10 +125,20 @@ public class UsuarioModalForm : Form
 
     private async Task CargarDatosInicialesAsync()
     {
-        var roles = await _rolService.ObtenerRolesAsync(soloActivos: true);
+        var todosRoles = await _rolService.ObtenerRolesAsync(soloActivos: true);
+        
+        // Reglas de jerarquía:
+        // 1. Nadie puede crear o asignar Super Admin (solo existe 1 cuenta josebdo).
+        // 2. Si quien crea/edita es Admin (Dueño), tampoco puede crear ni asignar el rol Admin (solo SuperAdmin puede crear Admins).
+        var rolesPermitidos = todosRoles.Where(r => r.Nombre != Rol.SuperAdmin).ToList();
+        if (_sesionActual != null && !_sesionActual.EsSuperAdmin)
+        {
+            rolesPermitidos = rolesPermitidos.Where(r => r.Nombre != Rol.Admin).ToList();
+        }
+
         _cbRoles.DisplayMember = nameof(Rol.Nombre);
         _cbRoles.ValueMember = nameof(Rol.Id);
-        _cbRoles.DataSource = roles;
+        _cbRoles.DataSource = rolesPermitidos;
 
         if (_usuarioIdParaEditar.HasValue)
         {

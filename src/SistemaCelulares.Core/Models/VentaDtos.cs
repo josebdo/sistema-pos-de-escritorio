@@ -36,6 +36,7 @@ public class RegistrarVentaRequestDto
     
     public List<ItemCarritoVentaDto> Items { get; set; } = new();
     public RegistrarPagoDto? PagoRequest { get; set; }
+    public int? PagoId { get; set; }
 }
 
 public class ResultadoVentaDto

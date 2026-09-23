@@ -64,9 +64,12 @@ public class UsuarioService : IUsuarioService
         if (existe)
             throw new InvalidOperationException($"Ya existe un usuario con el nombre '{nombreUsuario}'.");
 
-        var rolExiste = await _context.Roles.AnyAsync(r => r.Id == rolId && r.Activo, cancellationToken);
-        if (!rolExiste)
+        var rol = await _context.Roles.FirstOrDefaultAsync(r => r.Id == rolId && r.Activo, cancellationToken);
+        if (rol == null)
             throw new InvalidOperationException("El rol seleccionado no es válido o está inactivo.");
+
+        if (rol.Nombre == Rol.SuperAdmin)
+            throw new InvalidOperationException("No está permitido crear usuarios adicionales con el rol Super Admin.");
 
         var usuario = new Usuario
         {
@@ -74,6 +77,7 @@ public class UsuarioService : IUsuarioService
             NombreUsuario = nombreUsuario.Trim(),
             PasswordHash = _hasher.HashPassword(passwordTemporal),
             RolId = rolId,
+            Rol = rol,
             Email = email?.Trim(),
             Telefono = telefono?.Trim(),
             Activo = true,

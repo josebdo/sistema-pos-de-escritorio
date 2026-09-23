@@ -199,7 +199,7 @@ public class UsuariosForm : Form
             string.IsNullOrEmpty(filtro) ||
             u.NombreCompleto.ToLower().Contains(filtro) ||
             u.NombreUsuario.ToLower().Contains(filtro) ||
-            u.Rol.Nombre.ToLower().Contains(filtro)
+            (u.Rol?.Nombre != null && u.Rol.Nombre.ToLower().Contains(filtro))
         ).ToList();
 
         _gridUsuarios.Rows.Clear();
@@ -209,7 +209,7 @@ public class UsuariosForm : Form
                 u.Id,
                 u.NombreCompleto,
                 u.NombreUsuario,
-                u.Rol.Nombre,
+                u.Rol?.Nombre ?? "Sin Rol",
                 u.Telefono ?? "-",
                 u.Activo ? "Activo" : "Inactivo",
                 u.DebeCambiarPassword ? "Pendiente" : "OK",
@@ -238,7 +238,7 @@ public class UsuariosForm : Form
 
     private async Task AbrirCrearUsuarioAsync()
     {
-        var modal = new UsuarioModalForm(_usuarioService, _rolService);
+        var modal = new UsuarioModalForm(_usuarioService, _rolService, _sesionActual);
         if (modal.ShowDialog(this) == DialogResult.OK)
         {
             await RecargarUsuariosAsync();
@@ -254,7 +254,7 @@ public class UsuariosForm : Form
             return;
         }
 
-        var modal = new UsuarioModalForm(_usuarioService, _rolService, usuario.Id);
+        var modal = new UsuarioModalForm(_usuarioService, _rolService, _sesionActual, usuario.Id);
         if (modal.ShowDialog(this) == DialogResult.OK)
         {
             await RecargarUsuariosAsync();

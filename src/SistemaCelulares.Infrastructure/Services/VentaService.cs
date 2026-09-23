@@ -136,7 +136,7 @@ public class VentaService : IVentaService
         }
 
         // 5. Procesar Pago
-        int? pagoId = null;
+        int? pagoId = request.PagoId;
         decimal vuelto = 0m;
         if (request.PagoRequest != null)
         {
@@ -157,6 +157,14 @@ public class VentaService : IVentaService
 
             pagoId = resultadoPago.PagoId;
             vuelto = resultadoPago.MontoVuelto;
+        }
+        else if (pagoId.HasValue)
+        {
+            var pagoExistente = await _context.Pagos.FindAsync(pagoId.Value);
+            if (pagoExistente != null)
+            {
+                vuelto = pagoExistente.MontoVuelto;
+            }
         }
 
         // 6. Generar Correlativo de Factura Interna

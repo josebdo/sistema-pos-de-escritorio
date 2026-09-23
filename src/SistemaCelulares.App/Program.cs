@@ -37,14 +37,27 @@ internal static class Program
             DbInitializer.InitializeAsync(dbContext, hasher).GetAwaiter().GetResult();
         }
 
-        // 5. Flujo de Autenticación Principal
+        // 5. Flujo de Autenticación Principal (Ciclo controlado de Login / Sesión)
         var authService = ServiceProvider.GetRequiredService<IAuthService>();
-        using var loginForm = new LoginForm(authService);
-
-        if (loginForm.ShowDialog() == DialogResult.OK && loginForm.SesionIniciada != null)
+        while (true)
         {
+            using var loginForm = new LoginForm(authService);
+            var dialogResult = loginForm.ShowDialog();
+
+            if (dialogResult != DialogResult.OK || loginForm.SesionIniciada == null)
+            {
+                // Usuario cerró el login con la 'X' o Cancelar -> Salir limpiamente
+                break;
+            }
+
             var mainForm = new MainForm(ServiceProvider, loginForm.SesionIniciada);
             Application.Run(mainForm);
+
+            // Si se cerró la ventana principal sin solicitar cerrar sesión -> Salir
+            if (!mainForm.CierreSesionSolicitado)
+            {
+                break;
+            }
         }
     }
 

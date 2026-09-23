@@ -20,6 +20,7 @@ public class MainForm : Form
     private Panel _panelContenido = null!;
     private Form? _formularioActivo;
     private Button? _botonActivo;
+    public bool CierreSesionSolicitado { get; private set; }
 
     public MainForm(IServiceProvider serviceProvider, SesionUsuario sesion)
     {
@@ -27,7 +28,14 @@ public class MainForm : Form
         _sesion = sesion;
 
         InitializeCustomComponents();
-        CargarPantallaInicio();
+        if (_sesion.RolNombre == Rol.Cajero)
+        {
+            AbrirVentasPos();
+        }
+        else
+        {
+            CargarPantallaInicio();
+        }
     }
 
     private void InitializeCustomComponents()
@@ -208,12 +216,23 @@ public class MainForm : Form
         btnCerrarSesion.FlatAppearance.BorderSize = 0;
         btnCerrarSesion.MouseEnter += (s, e) => { btnCerrarSesion.ForeColor = UITheme.Danger; btnCerrarSesion.BackColor = UITheme.BgDanger; };
         btnCerrarSesion.MouseLeave += (s, e) => { btnCerrarSesion.ForeColor = UITheme.TextSecondary; btnCerrarSesion.BackColor = UITheme.Surface1; };
-        btnCerrarSesion.Click += (s, e) =>
+        btnCerrarSesion.Click += async (s, e) =>
         {
+            if (await TieneTurnoCajaAbiertoAsync())
+            {
+                MessageBox.Show(
+                    "⚠️ No puede cerrar sesión porque tiene un Turno de Caja ABIERTO.\n\nPor favor, vaya al módulo de 'Caja y Turnos' y realice el Cierre y Arqueo de Caja antes de salir.",
+                    "Turno de Caja Abierto",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
             var res = MessageBox.Show("¿Desea cerrar la sesión actual?", "Cerrar Sesión", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (res == DialogResult.Yes)
             {
-                Application.Restart();
+                CierreSesionSolicitado = true;
+                Close();
             }
         };
         panelBottom.Controls.Add(btnCerrarSesion);
@@ -239,29 +258,38 @@ public class MainForm : Form
 
     private void ConstruirBotonesMenuPorRol(FlowLayoutPanel panelMenu)
     {
-        CrearBotonMenu(panelMenu, "🏠  Inicio", () => CargarPantallaInicio(), true);
-
         if (_sesion.RolNombre == Rol.Cajero)
         {
-            // Menú Cajero: Ventas, Caja y Turno, Historial de Ventas, Clientes, Reparaciones (solo cobrar)
-            CrearBotonMenu(panelMenu, "🛒  Ventas", () => AbrirVentasPos());
+            // Menú Cajero: Ventas, Caja y Turno (solo su turno), Reparaciones (solo cobrar)
+            // NO Inicio (Dashboard), NO Clientes, NO Historial de Ventas global
+            CrearBotonMenu(panelMenu, "🛒  Ventas", () => AbrirVentasPos(), activoInicial: true);
             CrearBotonMenu(panelMenu, "💵  Caja y Turno", () => AbrirCajaTurnos());
-            CrearBotonMenu(panelMenu, "🧾  Historial de Ventas", () => AbrirHistorialVentas());
-            CrearBotonMenu(panelMenu, "👥  Clientes", () => AbrirClientes());
             CrearBotonMenu(panelMenu, "🔧  Reparaciones (solo cobrar)", () => AbrirReparaciones(soloCobrar: true));
         }
         else if (_sesion.RolNombre == Rol.Tecnico)
         {
-            // Menú Técnico: Reparaciones, Clientes, Productos (consulta), Inventario (consulta), Ventas / Caja (deshabilitado)
+            // Menú Técnico: Inicio (Dashboard Técnico), Reparaciones, Clientes, Productos (consulta), Inventario (consulta)
+            CrearBotonMenu(panelMenu, "🏠  Inicio", () => CargarPantallaInicio(), activoInicial: true);
             CrearBotonMenu(panelMenu, "🔧  Reparaciones", () => AbrirReparaciones(soloCobrar: false));
             CrearBotonMenu(panelMenu, "👥  Clientes", () => AbrirClientes());
             CrearBotonMenu(panelMenu, "🏷️  Productos (consulta)", () => AbrirProductos(soloLectura: true));
             CrearBotonMenu(panelMenu, "📦  Inventario (consulta)", () => AbrirInventario(soloLectura: true));
-            CrearBotonMenuDeshabilitado(panelMenu, "🛒  Ventas / Caja");
+        }
+        else if (_sesion.RolNombre == Rol.Almacenista)
+        {
+            // Menú Almacenista: Inicio, Productos, Inventario, Proveedores, Compras, Alertas Stock
+            CrearBotonMenu(panelMenu, "🏠  Inicio", () => CargarPantallaInicio(), activoInicial: true);
+            CrearBotonMenu(panelMenu, "🏷️  Productos", () => AbrirProductos(soloLectura: false));
+            CrearBotonMenu(panelMenu, "📦  Inventario", () => AbrirInventario(soloLectura: false));
+            CrearBotonMenu(panelMenu, "🚚  Proveedores", () => AbrirProveedores());
+            CrearBotonMenu(panelMenu, "📥  Registrar Compra", () => AbrirRegistrarCompra());
+            CrearBotonMenu(panelMenu, "📋  Historial Compras", () => AbrirHistorialCompras());
+            CrearBotonMenu(panelMenu, "⚠️  Alertas Stock", () => AbrirAlertasStock());
         }
         else if (_sesion.RolNombre == Rol.Admin)
         {
             // Menú Admin (Dueño)
+            CrearBotonMenu(panelMenu, "🏠  Inicio", () => CargarPantallaInicio(), activoInicial: true);
             CrearBotonMenu(panelMenu, "🛒  Ventas", () => AbrirVentasPos());
             CrearBotonMenu(panelMenu, "💵  Caja y Turnos", () => AbrirCajaTurnos());
             CrearBotonMenu(panelMenu, "🧾  Historial de Ventas", () => AbrirHistorialVentas());
@@ -278,6 +306,7 @@ public class MainForm : Form
         else // Super Admin
         {
             // Menú Super Admin (Acceso Total y Soporte Técnico)
+            CrearBotonMenu(panelMenu, "🏠  Inicio", () => CargarPantallaInicio(), activoInicial: true);
             CrearBotonMenu(panelMenu, "🛒  Ventas", () => AbrirVentasPos());
             CrearBotonMenu(panelMenu, "💵  Caja y Turnos", () => AbrirCajaTurnos());
             CrearBotonMenu(panelMenu, "🧾  Historial de Ventas", () => AbrirHistorialVentas());
@@ -513,6 +542,61 @@ public class MainForm : Form
         {
             CargarPantallaInicio();
         }
+    }
+
+    private void AbrirHistorialCompras()
+    {
+        var f = new HistorialComprasForm(
+            _serviceProvider.GetRequiredService<ICompraService>(),
+            _serviceProvider.GetRequiredService<IProveedorService>(),
+            _serviceProvider.GetRequiredService<IProductoService>(),
+            _sesion);
+        AbrirFormularioHijo(f, "Historial de Compras");
+    }
+
+    private void AbrirAlertasStock()
+    {
+        var f = new AlertasStockForm(
+            _serviceProvider.GetRequiredService<IAlertaStockService>(),
+            _serviceProvider.GetRequiredService<ICompraService>(),
+            _serviceProvider.GetRequiredService<IProveedorService>(),
+            _serviceProvider.GetRequiredService<IProductoService>(),
+            _sesion);
+        AbrirFormularioHijo(f, "Alertas de Stock");
+    }
+
+    private async Task<bool> TieneTurnoCajaAbiertoAsync()
+    {
+        try
+        {
+            var turnoService = _serviceProvider.GetRequiredService<ITurnoService>();
+            var turno = await turnoService.ObtenerTurnoAbiertoAsync(_sesion.UsuarioId);
+            return turno != null && turno.Estado == TurnoEstado.Abierto;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        if (!CierreSesionSolicitado && e.CloseReason == CloseReason.UserClosing)
+        {
+            var tieneTurno = TieneTurnoCajaAbiertoAsync().GetAwaiter().GetResult();
+            if (tieneTurno)
+            {
+                MessageBox.Show(
+                    "⚠️ No puede cerrar la aplicación porque tiene un Turno de Caja ABIERTO.\n\nPor favor realice el Cierre y Arqueo de Caja antes de salir.",
+                    "Turno de Caja Abierto",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                e.Cancel = true;
+                return;
+            }
+        }
+
+        base.OnFormClosing(e);
     }
 
     private void AbrirMiPerfil(Label lblNomUser, Panel pnlAvatar)

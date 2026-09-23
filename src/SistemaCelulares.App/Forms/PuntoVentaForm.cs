@@ -307,14 +307,18 @@ public class PuntoVentaForm : Form
             Cursor = Cursors.Hand
         };
         _btnHistorial.FlatAppearance.BorderSize = 0;
+        _btnHistorial.Visible = _sesion.EsSuperAdmin || _sesion.RolNombre == Rol.Admin;
         _btnHistorial.Click += (s, e) =>
         {
             var f = new HistorialVentasForm(_ventaService, _sesion);
             f.ShowDialog(this);
         };
 
-        pnlBotonesCobro.Controls.Add(_btnHistorial);
-        pnlBotonesCobro.Controls.Add(spacerBtn2);
+        if (_btnHistorial.Visible)
+        {
+            pnlBotonesCobro.Controls.Add(_btnHistorial);
+            pnlBotonesCobro.Controls.Add(spacerBtn2);
+        }
         pnlBotonesCobro.Controls.Add(_btnLimpiar);
         pnlBotonesCobro.Controls.Add(spacerBtn);
         pnlBotonesCobro.Controls.Add(_btnCobrar);
@@ -977,13 +981,6 @@ public class PuntoVentaForm : Form
             return; // Cancelado
         }
 
-        var pagoRequest = new RegistrarPagoDto
-        {
-            MontoTotal = total,
-            UsuarioId = _sesion.UsuarioId,
-            TurnoId = _turnoActivo.Id
-        };
-
         var requestVenta = new RegistrarVentaRequestDto
         {
             UsuarioId = _sesion.UsuarioId,
@@ -993,6 +990,7 @@ public class PuntoVentaForm : Form
             NombreCliente = string.IsNullOrWhiteSpace(_txtClienteNombre.Text) ? "Consumidor Final" : _txtClienteNombre.Text.Trim(),
             RncCliente = _txtClienteRnc.Text.Trim(),
             Descuento = _numDescuento.Value,
+            PagoId = cobroModal.ResultadoPago.PagoId,
             Items = _carrito.ToList()
         };
 

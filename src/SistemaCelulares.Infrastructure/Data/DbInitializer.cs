@@ -96,6 +96,21 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
+        var rolAlmacenista = await context.Roles.Include(r => r.RolPermisos)
+            .FirstOrDefaultAsync(r => r.Nombre == Rol.Almacenista);
+        if (rolAlmacenista == null)
+        {
+            rolAlmacenista = new Rol
+            {
+                Nombre = Rol.Almacenista,
+                Descripcion = "Encargado de almacén: inventario, stock con IMEI, compras y recepción",
+                EsFijo = true,
+                Activo = true
+            };
+            context.Roles.Add(rolAlmacenista);
+            await context.SaveChangesAsync();
+        }
+
         // 3. Asignar Permisos a Roles Fijos
         // Super Admin tiene todos
         foreach (var p in todosLosPermisos)
@@ -165,6 +180,28 @@ public static class DbInitializer
                 !rolTecnico.RolPermisos.Any(rp => rp.PermisoId == permiso.Id))
             {
                 context.RolPermisos.Add(new RolPermiso { RolId = rolTecnico.Id, PermisoId = permiso.Id });
+            }
+        }
+
+        // Almacenista tiene permisos para inventario, productos, proveedores y compras
+        var codigosPermisosAlmacenista = new HashSet<string>
+        {
+            Permisos.ProductosVer,
+            Permisos.ProductosCrear,
+            Permisos.ProductosEditar,
+            Permisos.CategoriasGestionar,
+            Permisos.AlertasStockVer,
+            Permisos.ProveedoresGestionar,
+            Permisos.ComprasRegistrar,
+            Permisos.ComprasHistorial
+        };
+
+        foreach (var codigo in codigosPermisosAlmacenista)
+        {
+            if (permisosPorCodigo.TryGetValue(codigo, out var permiso) &&
+                !rolAlmacenista.RolPermisos.Any(rp => rp.PermisoId == permiso.Id))
+            {
+                context.RolPermisos.Add(new RolPermiso { RolId = rolAlmacenista.Id, PermisoId = permiso.Id });
             }
         }
 
@@ -543,6 +580,11 @@ public static class DbInitializer
                 UltimaModificacion TEXT NOT NULL
             );
         ");
+
+        // 7. Columnas en Ventas
+        await EjecutarSqlSeguroAsync(context, "ALTER TABLE Ventas ADD COLUMN Descuento TEXT NOT NULL DEFAULT '0';");
+        await EjecutarSqlSeguroAsync(context, "ALTER TABLE Ventas ADD COLUMN Subtotal TEXT NOT NULL DEFAULT '0';");
+        await EjecutarSqlSeguroAsync(context, "ALTER TABLE Ventas ADD COLUMN Itbis TEXT NOT NULL DEFAULT '0';");
     }
 
     private static async Task EjecutarSqlSeguroAsync(AppDbContext context, string sql)

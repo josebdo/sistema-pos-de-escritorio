@@ -73,7 +73,7 @@ public class DetalleTurnoVentasModalForm : Form
         var pnlMetricas = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 85,
+            Height = 98,
             ColumnCount = 5,
             RowCount = 1,
             Margin = new Padding(0, 0, 0, 10)
@@ -252,7 +252,7 @@ public class DetalleTurnoVentasModalForm : Form
         {
             Dock = DockStyle.Fill,
             BackColor = Color.White,
-            Padding = new Padding(12, 10, 12, 10),
+            Padding = new Padding(12, 8, 12, 8),
             Margin = new Padding(4)
         };
 
@@ -262,7 +262,7 @@ public class DetalleTurnoVentasModalForm : Form
             Font = UITheme.SmallFont,
             ForeColor = UITheme.TextSecondary,
             Dock = DockStyle.Top,
-            Height = 18
+            Height = 22
         };
 
         var lblV = new Label
@@ -271,7 +271,7 @@ public class DetalleTurnoVentasModalForm : Form
             Font = new Font("Segoe UI", 12.5F, FontStyle.Bold),
             ForeColor = colorValor,
             Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.BottomLeft
+            TextAlign = ContentAlignment.MiddleLeft
         };
 
         card.Controls.Add(lblV);

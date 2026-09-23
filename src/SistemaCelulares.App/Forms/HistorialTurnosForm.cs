@@ -224,16 +224,29 @@ public class HistorialTurnosForm : Form
 
     private async Task CargarUsuariosFiltroAsync()
     {
+        if (_sesionActual.RolNombre == Rol.Cajero)
+        {
+            var listaCombo = new List<UsuarioFiltroItem>
+            {
+                new(_sesionActual.UsuarioId, _sesionActual.NombreCompleto)
+            };
+            _cbUsuarios.DisplayMember = nameof(UsuarioFiltroItem.Nombre);
+            _cbUsuarios.ValueMember = nameof(UsuarioFiltroItem.Id);
+            _cbUsuarios.DataSource = listaCombo;
+            _cbUsuarios.Enabled = false;
+            return;
+        }
+
         var usuarios = await _usuarioService.ObtenerTodosAsync(incluirInactivos: false);
-        var listaCombo = new List<UsuarioFiltroItem>
+        var lista = new List<UsuarioFiltroItem>
         {
             new(0, "-- Todos los cajeros --")
         };
-        listaCombo.AddRange(usuarios.Select(u => new UsuarioFiltroItem(u.Id, u.NombreCompleto)));
+        lista.AddRange(usuarios.Select(u => new UsuarioFiltroItem(u.Id, u.NombreCompleto)));
 
         _cbUsuarios.DisplayMember = nameof(UsuarioFiltroItem.Nombre);
         _cbUsuarios.ValueMember = nameof(UsuarioFiltroItem.Id);
-        _cbUsuarios.DataSource = listaCombo;
+        _cbUsuarios.DataSource = lista;
     }
 
     private async Task RecargarTodoAsync()
@@ -270,7 +283,11 @@ public class HistorialTurnosForm : Form
         var hasta = _dtpHasta.Value.Date;
         int? usuarioId = null;
 
-        if (_cbUsuarios.SelectedValue is int uid && uid > 0)
+        if (_sesionActual.RolNombre == Rol.Cajero)
+        {
+            usuarioId = _sesionActual.UsuarioId;
+        }
+        else if (_cbUsuarios.SelectedValue is int uid && uid > 0)
         {
             usuarioId = uid;
         }
